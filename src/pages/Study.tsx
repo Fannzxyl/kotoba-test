@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { getCards, updateCard, getDecks } from '../utils/storage';
 import { calculateSM2 } from '../utils/sm2';
 import { Card, Grade } from '../types';
@@ -16,10 +16,12 @@ export const Study: React.FC = () => {
   const [deckName, setDeckName] = useState<string>('All Decks');
 
   const location = useLocation();
+  const navigate = useNavigate();
 
   // Load cards
   useEffect(() => {
     const loadQueue = () => {
+      setIsLoading(true);
       const now = new Date().toISOString();
       const searchParams = new URLSearchParams(location.search);
       const cramMode = searchParams.get('mode') === 'cram';
@@ -33,9 +35,14 @@ export const Study: React.FC = () => {
         const decks = getDecks();
         const d = decks.find(d => d.id === deckId);
         if (d) setDeckName(d.name);
+      } else {
+        setDeckName('All Decks');
       }
 
       setIsCramming(cramMode);
+      setIsFinished(false);
+      setCurrentIndex(0);
+      setIsFlipped(false);
 
       if (cramMode) {
         // Cram Mode: Random 20 cards from selection
@@ -69,12 +76,26 @@ export const Study: React.FC = () => {
   const handleGrade = useCallback((grade: Grade) => {
     if (!currentCard) return;
 
-    const newMeta = calculateSM2(currentCard.reviewMeta, grade);
-    const updatedCard = { ...currentCard, reviewMeta: newMeta };
+    // Only update SM-2 stats if NOT cramming
+    if (!isCramming) {
+      const newMeta = calculateSM2(currentCard.reviewMeta, grade);
+      const updatedCard = { ...currentCard, reviewMeta: newMeta };
+      updateCard(updatedCard);
+    }
+    // In cram mode, we don't save progress to avoid messing up schedule
     
-    updateCard(updatedCard);
     handleNext();
-  }, [currentCard, handleNext]);
+  }, [currentCard, handleNext, isCramming]);
+
+  const toggleMode = () => {
+    const searchParams = new URLSearchParams(location.search);
+    if (isCramming) {
+      searchParams.delete('mode');
+    } else {
+      searchParams.set('mode', 'cram');
+    }
+    navigate({ search: searchParams.toString() });
+  };
 
   // Keyboard shortcuts
   useEffect(() => {
@@ -109,16 +130,20 @@ export const Study: React.FC = () => {
         <p className="text-gray-400 mb-8">You have no cards due for review right now.</p>
         
         <div className="flex flex-col gap-3 w-full px-8">
-          <Link 
-            to={`/study?mode=cram${location.search.includes('deckId') ? '&' + location.search.split('?')[1] : ''}`} 
+          <button 
+            onClick={() => {
+               const searchParams = new URLSearchParams(location.search);
+               searchParams.set('mode', 'cram');
+               navigate({ search: searchParams.toString() });
+            }}
             className="py-4 rounded-xl bg-primary hover:bg-violet-600 text-white font-bold shadow-lg hover:scale-105 transition-all flex items-center justify-center gap-2"
           >
             <Zap size={20} fill="currentColor" />
             Review Ahead (Cram Mode)
-          </Link>
+          </button>
           <Link 
             to="/decks" 
-            className="py-4 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-violet-200 font-semibold transition-all"
+            className="py-4 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-violet-200 font-semibold transition-all text-center"
           >
             Back to Decks
           </Link>
@@ -165,11 +190,19 @@ export const Study: React.FC = () => {
   return (
     <div className="max-w-2xl mx-auto">
       <div className="flex justify-between items-center mb-6 text-sm text-violet-300 font-mono">
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-3">
             <span className="bg-white/5 px-3 py-1 rounded-full border border-white/10 flex items-center gap-1">
               <Layers size={12} /> {deckName}
             </span>
-            {isCramming && <span className="text-yellow-400 text-xs">⚡ Cram</span>}
+            
+            <button 
+              onClick={toggleMode}
+              title={isCramming ? "Switch to Spaced Repetition" : "Switch to Cram Mode"}
+              className={`flex items-center gap-1.5 px-3 py-1 rounded-full border transition-all ${isCramming ? 'bg-yellow-500/20 border-yellow-500/50 text-yellow-400' : 'bg-white/5 border-white/10 text-gray-400 hover:text-white hover:bg-white/10'}`}
+            >
+              <Zap size={12} fill={isCramming ? "currentColor" : "none"} /> 
+              <span className="text-xs font-semibold">{isCramming ? 'Cramming' : 'Review'}</span>
+            </button>
         </div>
         <span className="flex items-center gap-2">
           {currentIndex + 1} / {queue.length}
@@ -253,3 +286,4 @@ export const Study: React.FC = () => {
     </div>
   );
 };
+    

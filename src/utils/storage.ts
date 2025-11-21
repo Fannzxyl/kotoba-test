@@ -18,6 +18,14 @@ const SEED_DECKS: Deck[] = [
     updatedAt: new Date().toISOString()
   },
   {
+    id: 'deck-minuman',
+    name: 'Minuman',
+    description: 'Jenis-jenis minuman dalam bahasa Jepang',
+    tags: ['vocab', 'minuman'],
+    createdAt: new Date('2025-01-01').toISOString(),
+    updatedAt: new Date().toISOString()
+  },
+  {
     id: 'deck-basics',
     name: 'Greetings & Basics',
     description: 'Essential phrases for daily conversation',
@@ -32,11 +40,11 @@ const SEED_CARDS: Card[] = [
   {
     id: "m1",
     deckId: "deck-makanan",
-    romaji: "neko",
-    japanese: "猫",
-    indonesia: "Kucing", // Techncially animal but requested in prompt sample
-    example: "猫がベッドで寝ています。",
-    tags: ["hewan", "makanan?"],
+    romaji: "tamago",
+    japanese: "卵",
+    indonesia: "Telur",
+    example: "卵を割る。",
+    tags: ["makanan"],
     createdAt: new Date().toISOString(),
     reviewMeta: getInitialReviewMeta()
   },
@@ -54,15 +62,38 @@ const SEED_CARDS: Card[] = [
   {
     id: "m3",
     deckId: "deck-makanan",
-    romaji: "mikusu",
-    japanese: "ミックス",
-    indonesia: "Campuran",
-    example: "サラダをミックスする。",
-    tags: ["makanan", "kata-benda"],
+    romaji: "tempura",
+    japanese: "天ぷら",
+    indonesia: "Tempura",
+    example: "天ぷらを食べる。",
+    tags: ["makanan"],
     createdAt: new Date().toISOString(),
     reviewMeta: getInitialReviewMeta()
   },
-  // Basics Deck
+  // Minuman Deck
+  {
+    id: "d1",
+    deckId: "deck-minuman",
+    romaji: "juusu",
+    japanese: "ジュース",
+    indonesia: "Jus",
+    example: "ジュースを飲む。",
+    tags: ["minuman"],
+    createdAt: new Date().toISOString(),
+    reviewMeta: getInitialReviewMeta()
+  },
+  {
+    id: "d2",
+    deckId: "deck-minuman",
+    romaji: "ocha",
+    japanese: "お茶",
+    indonesia: "Teh",
+    example: "お茶を飲む。",
+    tags: ["minuman"],
+    createdAt: new Date().toISOString(),
+    reviewMeta: getInitialReviewMeta()
+  },
+  // Basics (Legacy/Extra)
   {
     id: "k1",
     deckId: "deck-basics",
