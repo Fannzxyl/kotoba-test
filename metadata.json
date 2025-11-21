@@ -1,0 +1,5 @@
+{
+  "name": "KataSensei",
+  "description": "A modern Japanese vocabulary learning application using the Spaced Repetition (SM-2) algorithm with a liquid glass UI aesthetic.",
+  "requestFramePermissions": []
+}

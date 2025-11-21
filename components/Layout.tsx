@@ -1,0 +1,61 @@
+import React from 'react';
+import { Link, useLocation } from 'react-router-dom';
+import { LayoutGrid, BookOpen, Upload, Zap } from 'lucide-react';
+
+export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const location = useLocation();
+
+  const isActive = (path: string) => location.pathname === path;
+
+  return (
+    <div className="min-h-screen relative overflow-hidden text-gray-100 font-sans">
+      {/* Animated Background Blobs */}
+      <div className="fixed top-[-10%] left-[-10%] w-96 h-96 bg-primary rounded-full liquid-blob opacity-30 blur-[120px]"></div>
+      <div className="fixed bottom-[-10%] right-[-10%] w-[500px] h-[500px] bg-secondary rounded-full liquid-blob opacity-20 blur-[120px]" style={{ animationDelay: '2s' }}></div>
+      
+      <nav className="fixed top-0 w-full z-50 border-b border-white/10 bg-black/20 backdrop-blur-md">
+        <div className="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary to-secondary flex items-center justify-center shadow-lg shadow-purple-500/20">
+              <Zap size={18} className="text-white" />
+            </div>
+            <span className="font-bold text-xl tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-white to-gray-400">
+              KataSensei
+            </span>
+          </div>
+
+          <div className="flex items-center gap-1 sm:gap-2">
+            <NavLink to="/" active={isActive('/')} icon={<LayoutGrid size={18} />}>
+              Dashboard
+            </NavLink>
+            <NavLink to="/study" active={isActive('/study')} icon={<BookOpen size={18} />}>
+              Study
+            </NavLink>
+            <NavLink to="/import" active={isActive('/import')} icon={<Upload size={18} />}>
+              Import
+            </NavLink>
+          </div>
+        </div>
+      </nav>
+
+      <main className="pt-24 pb-12 px-4 max-w-6xl mx-auto relative z-10">
+        {children}
+      </main>
+    </div>
+  );
+};
+
+const NavLink: React.FC<{ to: string; active: boolean; icon: React.ReactNode; children: React.ReactNode }> = ({ to, active, icon, children }) => (
+  <Link
+    to={to}
+    className={`
+      flex items-center gap-2 px-4 py-2 rounded-full transition-all duration-300 text-sm font-medium
+      ${active 
+        ? 'bg-white/10 text-white shadow-[0_0_20px_rgba(168,85,247,0.3)] border border-white/10' 
+        : 'text-gray-400 hover:text-white hover:bg-white/5'}
+    `}
+  >
+    {icon}
+    <span className="hidden sm:inline">{children}</span>
+  </Link>
+);
