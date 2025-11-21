@@ -310,7 +310,7 @@ const DeckFormModal: React.FC<{
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-sm p-4" role="dialog" aria-modal="true">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#050508]/95 md:bg-black/90 md:backdrop-blur-sm p-4 transition-all" role="dialog" aria-modal="true">
        <div className="bg-[#1a1a24] border border-white/10 w-full max-w-md rounded-2xl p-4 md:p-6 shadow-2xl animate-fade-in mx-2 md:mx-4 ring-1 ring-white/10">
          <div className="flex justify-between items-center mb-4">
            <h2 className="text-lg md:text-xl font-bold text-white">{initialData ? 'Edit Deck' : 'Create New Deck'}</h2>
@@ -386,7 +386,7 @@ const ImportModal: React.FC<{ onClose: () => void, onImportSuccess: () => void }
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-sm p-4" role="dialog" aria-modal="true">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#050508]/95 md:bg-black/90 md:backdrop-blur-sm p-4 transition-all" role="dialog" aria-modal="true">
        <div className="bg-[#1a1a24] border border-white/10 w-full max-w-2xl rounded-2xl p-4 md:p-6 shadow-2xl animate-fade-in flex flex-col max-h-[90vh] ring-1 ring-white/10">
          <div className="flex justify-between items-center mb-4">
            <h2 className="text-lg md:text-xl font-bold text-white">Import Deck (JSON)</h2>
