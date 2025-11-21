@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { getDecks, getCards, deleteCard } from '../utils/storage';
 import { Deck, Card } from '../types';
-import { ArrowLeft, Search, Trash2, Plus, BookOpen, AlertCircle } from 'lucide-react';
+import { ArrowLeft, Search, Trash2, Plus, BookOpen } from 'lucide-react';
 
 export const DeckDetails: React.FC = () => {
   const { deckId } = useParams<{ deckId: string }>();
