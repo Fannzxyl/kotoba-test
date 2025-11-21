@@ -259,30 +259,30 @@ export const Study: React.FC = () => {
         <div className="grid grid-cols-4 gap-2 md:gap-4">
           <button 
             onClick={(e) => { e.stopPropagation(); handleGrade(1); }}
-            className="group py-3 md:py-4 rounded-xl md:rounded-2xl bg-red-500/10 border border-red-500/30 text-red-400 hover:bg-red-500 hover:text-white hover:shadow-[0_0_20px_rgba(239,68,68,0.4)] transition-all flex flex-col items-center gap-1 md:gap-2 active:scale-95 touch-manipulation"
+            className="group py-2 md:py-4 rounded-xl md:rounded-2xl bg-red-500/10 border border-red-500/30 text-red-400 hover:bg-red-500 hover:text-white hover:shadow-[0_0_20px_rgba(239,68,68,0.4)] transition-all flex flex-col items-center gap-1 md:gap-2 active:scale-95 touch-manipulation"
           >
-            <span className="font-bold text-sm md:text-lg">Again</span>
+            <span className="font-bold text-xs md:text-lg">Again</span>
             <span className="text-[9px] md:text-[10px] opacity-60 uppercase tracking-wide font-mono border border-current px-1.5 rounded group-hover:border-white/50 hidden md:inline-block">1</span>
           </button>
           <button 
             onClick={(e) => { e.stopPropagation(); handleGrade(2); }}
-            className="group py-3 md:py-4 rounded-xl md:rounded-2xl bg-orange-500/10 border border-orange-500/30 text-orange-400 hover:bg-orange-500 hover:text-white hover:shadow-[0_0_20px_rgba(249,115,22,0.4)] transition-all flex flex-col items-center gap-1 md:gap-2 active:scale-95 touch-manipulation"
+            className="group py-2 md:py-4 rounded-xl md:rounded-2xl bg-orange-500/10 border border-orange-500/30 text-orange-400 hover:bg-orange-500 hover:text-white hover:shadow-[0_0_20px_rgba(249,115,22,0.4)] transition-all flex flex-col items-center gap-1 md:gap-2 active:scale-95 touch-manipulation"
           >
-            <span className="font-bold text-sm md:text-lg">Hard</span>
+            <span className="font-bold text-xs md:text-lg">Hard</span>
             <span className="text-[9px] md:text-[10px] opacity-60 uppercase tracking-wide font-mono border border-current px-1.5 rounded group-hover:border-white/50 hidden md:inline-block">2</span>
           </button>
           <button 
             onClick={(e) => { e.stopPropagation(); handleGrade(3); }}
-            className="group py-3 md:py-4 rounded-xl md:rounded-2xl bg-blue-500/10 border border-blue-500/30 text-blue-400 hover:bg-blue-500 hover:text-white hover:shadow-[0_0_20px_rgba(59,130,246,0.4)] transition-all flex flex-col items-center gap-1 md:gap-2 active:scale-95 touch-manipulation"
+            className="group py-2 md:py-4 rounded-xl md:rounded-2xl bg-blue-500/10 border border-blue-500/30 text-blue-400 hover:bg-blue-500 hover:text-white hover:shadow-[0_0_20px_rgba(59,130,246,0.4)] transition-all flex flex-col items-center gap-1 md:gap-2 active:scale-95 touch-manipulation"
           >
-            <span className="font-bold text-sm md:text-lg">Good</span>
+            <span className="font-bold text-xs md:text-lg">Good</span>
             <span className="text-[9px] md:text-[10px] opacity-60 uppercase tracking-wide font-mono border border-current px-1.5 rounded group-hover:border-white/50 hidden md:inline-block">3</span>
           </button>
           <button 
             onClick={(e) => { e.stopPropagation(); handleGrade(4); }}
-            className="group py-3 md:py-4 rounded-xl md:rounded-2xl bg-green-500/10 border border-green-500/30 text-green-400 hover:bg-green-500 hover:text-white hover:shadow-[0_0_20px_rgba(34,197,94,0.4)] transition-all flex flex-col items-center gap-1 md:gap-2 active:scale-95 touch-manipulation"
+            className="group py-2 md:py-4 rounded-xl md:rounded-2xl bg-green-500/10 border border-green-500/30 text-green-400 hover:bg-green-500 hover:text-white hover:shadow-[0_0_20px_rgba(34,197,94,0.4)] transition-all flex flex-col items-center gap-1 md:gap-2 active:scale-95 touch-manipulation"
           >
-            <span className="font-bold text-sm md:text-lg">Easy</span>
+            <span className="font-bold text-xs md:text-lg">Easy</span>
             <span className="text-[9px] md:text-[10px] opacity-60 uppercase tracking-wide font-mono border border-current px-1.5 rounded group-hover:border-white/50 hidden md:inline-block">4</span>
           </button>
         </div>

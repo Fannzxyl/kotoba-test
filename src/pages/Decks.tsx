@@ -297,6 +297,12 @@ const DeckFormModal: React.FC<{
   const [desc, setDesc] = useState(initialData?.description || '');
   const [tagsStr, setTagsStr] = useState(initialData?.tags?.join(', ') || '');
 
+  // Lock scroll when modal is open
+  useEffect(() => {
+    document.body.style.overflow = 'hidden';
+    return () => { document.body.style.overflow = 'unset'; };
+  }, []);
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const tags = tagsStr.split(',').map(t => t.trim()).filter(Boolean);
@@ -304,28 +310,28 @@ const DeckFormModal: React.FC<{
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
-       <div className="bg-[#1a1a24] border border-white/10 w-full max-w-md rounded-2xl p-5 md:p-6 shadow-2xl animate-fade-in mx-4">
-         <div className="flex justify-between items-center mb-4 md:mb-6">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-sm p-4" role="dialog" aria-modal="true">
+       <div className="bg-[#1a1a24] border border-white/10 w-full max-w-md rounded-2xl p-4 md:p-6 shadow-2xl animate-fade-in mx-2 md:mx-4 ring-1 ring-white/10">
+         <div className="flex justify-between items-center mb-4">
            <h2 className="text-lg md:text-xl font-bold text-white">{initialData ? 'Edit Deck' : 'Create New Deck'}</h2>
-           <button onClick={onClose}><X className="text-gray-400 hover:text-white" /></button>
+           <button onClick={onClose} className="p-2 hover:bg-white/5 rounded-full"><X className="text-gray-400 hover:text-white" size={20} /></button>
          </div>
-         <form onSubmit={handleSubmit} className="space-y-4">
+         <form onSubmit={handleSubmit} className="space-y-3 md:space-y-4">
             <div>
-              <label className="block text-xs text-gray-400 uppercase font-bold mb-1">Deck Title</label>
-              <input required type="text" value={name} onChange={e => setName(e.target.value)} className="w-full bg-black/30 border border-white/10 rounded-lg px-3 py-2 text-white focus:border-primary outline-none" placeholder="e.g. JLPT N5 Verbs" />
+              <label className="block text-xs text-gray-400 uppercase font-bold mb-1.5">Deck Title</label>
+              <input required type="text" value={name} onChange={e => setName(e.target.value)} className="w-full bg-black/30 border border-white/10 rounded-lg px-3 py-2.5 text-sm text-white focus:border-primary outline-none placeholder-gray-600" placeholder="e.g. JLPT N5 Verbs" />
             </div>
             <div>
-              <label className="block text-xs text-gray-400 uppercase font-bold mb-1">Description</label>
-              <textarea value={desc} onChange={e => setDesc(e.target.value)} className="w-full bg-black/30 border border-white/10 rounded-lg px-3 py-2 text-white focus:border-primary outline-none h-20 resize-none" placeholder="What is this deck about?" />
+              <label className="block text-xs text-gray-400 uppercase font-bold mb-1.5">Description</label>
+              <textarea value={desc} onChange={e => setDesc(e.target.value)} className="w-full bg-black/30 border border-white/10 rounded-lg px-3 py-2.5 text-sm text-white focus:border-primary outline-none h-20 md:h-24 resize-none placeholder-gray-600" placeholder="What is this deck about?" />
             </div>
             <div>
-              <label className="block text-xs text-gray-400 uppercase font-bold mb-1">Tags (comma separated)</label>
-              <input type="text" value={tagsStr} onChange={e => setTagsStr(e.target.value)} className="w-full bg-black/30 border border-white/10 rounded-lg px-3 py-2 text-white focus:border-primary outline-none" placeholder="verb, n5, hard" />
+              <label className="block text-xs text-gray-400 uppercase font-bold mb-1.5">Tags (comma separated)</label>
+              <input type="text" value={tagsStr} onChange={e => setTagsStr(e.target.value)} className="w-full bg-black/30 border border-white/10 rounded-lg px-3 py-2.5 text-sm text-white focus:border-primary outline-none placeholder-gray-600" placeholder="verb, n5, hard" />
             </div>
-            <div className="flex justify-end gap-3 pt-4">
-              <button type="button" onClick={onClose} className="px-4 py-2 rounded-lg hover:bg-white/5 text-gray-300 text-sm">Cancel</button>
-              <button type="submit" className="px-6 py-2 rounded-lg bg-primary hover:bg-violet-600 text-white font-bold text-sm">Save Deck</button>
+            <div className="flex justify-end gap-3 pt-4 mt-2 border-t border-white/5">
+              <button type="button" onClick={onClose} className="px-4 py-2 rounded-lg hover:bg-white/5 text-gray-300 text-xs md:text-sm font-medium">Cancel</button>
+              <button type="submit" className="px-5 py-2.5 rounded-lg bg-primary hover:bg-violet-600 text-white font-bold text-xs md:text-sm shadow-lg shadow-purple-500/20">Save Deck</button>
             </div>
          </form>
        </div>
@@ -337,6 +343,12 @@ const ImportModal: React.FC<{ onClose: () => void, onImportSuccess: () => void }
   const [json, setJson] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [preview, setPreview] = useState<{title: string, count: number} | null>(null);
+
+  // Lock scroll
+  useEffect(() => {
+    document.body.style.overflow = 'hidden';
+    return () => { document.body.style.overflow = 'unset'; };
+  }, []);
 
   const handleValidate = () => {
     try {
@@ -374,11 +386,11 @@ const ImportModal: React.FC<{ onClose: () => void, onImportSuccess: () => void }
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
-       <div className="bg-[#1a1a24] border border-white/10 w-full max-w-2xl rounded-2xl p-5 md:p-6 shadow-2xl animate-fade-in flex flex-col max-h-[90vh]">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-sm p-4" role="dialog" aria-modal="true">
+       <div className="bg-[#1a1a24] border border-white/10 w-full max-w-2xl rounded-2xl p-4 md:p-6 shadow-2xl animate-fade-in flex flex-col max-h-[90vh] ring-1 ring-white/10">
          <div className="flex justify-between items-center mb-4">
            <h2 className="text-lg md:text-xl font-bold text-white">Import Deck (JSON)</h2>
-           <button onClick={onClose}><X className="text-gray-400 hover:text-white" /></button>
+           <button onClick={onClose} className="p-2 hover:bg-white/5 rounded-full"><X className="text-gray-400 hover:text-white" size={20} /></button>
          </div>
          
          <div className="flex-1 overflow-hidden flex flex-col">

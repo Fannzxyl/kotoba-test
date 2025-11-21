@@ -69,7 +69,7 @@ export const Dashboard: React.FC = () => {
               <div className="relative z-10 mt-6 md:mt-8">
                 <Link 
                   to="/study" 
-                  className="inline-flex items-center gap-2 md:gap-3 bg-primary hover:bg-violet-600 text-white text-base md:text-lg font-bold py-3 px-6 md:py-4 md:px-8 rounded-2xl shadow-[0_0_30px_rgba(124,58,237,0.4)] hover:shadow-[0_0_50px_rgba(124,58,237,0.6)] hover:scale-105 transition-all duration-300 group active:scale-95"
+                  className="inline-flex items-center gap-2 md:gap-3 bg-primary hover:bg-violet-600 text-white text-sm md:text-lg font-bold py-3 px-5 md:py-4 md:px-8 rounded-2xl shadow-[0_0_30px_rgba(124,58,237,0.4)] hover:shadow-[0_0_50px_rgba(124,58,237,0.6)] hover:scale-105 transition-all duration-300 group active:scale-95"
                 >
                   <Play fill="currentColor" size={20} className="group-hover:translate-x-1 transition-transform md:w-6 md:h-6" />
                   Start Session
@@ -121,7 +121,7 @@ export const Dashboard: React.FC = () => {
               <div className="relative z-10 mt-6 md:mt-8">
                 <Link 
                   to="/import" 
-                  className="inline-flex items-center gap-3 bg-primary hover:bg-violet-600 text-white text-base md:text-lg font-bold py-3 px-6 md:py-4 md:px-8 rounded-2xl shadow-lg hover:scale-105 transition-all duration-300"
+                  className="inline-flex items-center gap-3 bg-primary hover:bg-violet-600 text-white text-sm md:text-lg font-bold py-3 px-5 md:py-4 md:px-8 rounded-2xl shadow-lg hover:scale-105 transition-all duration-300"
                 >
                   <Layers size={20} className="md:w-6 md:h-6" />
                   Import Vocabulary
