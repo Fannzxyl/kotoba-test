@@ -52,7 +52,13 @@ export const DeckDetails: React.FC = () => {
     setAiError(null);
 
     try {
-      const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+      const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
+
+      if (!apiKey) {
+        throw new Error("VITE_GEMINI_API_KEY is not set. Please configure it in your environment variables.");
+      }
+
+      const ai = new GoogleGenAI({ apiKey });
       
       const prompt = `Generate ${aiCount} Japanese vocabulary flashcards about "${aiTopic}".
       Target level: Beginner to Intermediate.
