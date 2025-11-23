@@ -5,14 +5,14 @@ import { exportDeckToJSON } from '../modules/decks/api';
 import { Deck, Card } from '../modules/decks/model';
 import { 
   Search, Plus, MoreVertical, Play, Edit2, Trash2, Download, 
-  Layers, RotateCcw, X 
+  RotateCcw, X, Layers 
 } from 'lucide-react';
 
 export const Decks: React.FC = () => {
   const navigate = useNavigate();
   
   // Use Custom Hooks
-  const { decks, refreshDecks, createDeck, updateDeck, deleteDeck, restoreDeck } = useDecks();
+  const { decks, createDeck, updateDeck, deleteDeck, restoreDeck } = useDecks();
   // We load all cards to count them for each deck, strictly speaking we could optimize this in API
   // but for now client-side filtering is fine for the scale.
   const { cards, refreshCards } = useCards();
