@@ -64,7 +64,7 @@ export const KataCannonGame: React.FC = () => {
   }, [location.search]);
 
   // Sound Effects (Mocked)
-  const playSound = (type: 'shoot' | 'hit' | 'wrong') => {
+  const playSound = (_type: 'shoot' | 'hit' | 'wrong') => {
     // const audio = new Audio(`/sfx/${type}.mp3`);
     // audio.play().catch(() => {});
   };

@@ -1,4 +1,3 @@
-
 import { Card, TargetEntity } from '../core/types';
 
 export interface RoundData {
@@ -11,7 +10,7 @@ export interface RoundData {
 
 export class RoundManager {
   private cards: Card[];
-  private currentLevel: number = 1;
+  private _currentLevel: number = 1;
 
   constructor(cards: Card[]) {
     this.cards = cards;
@@ -25,7 +24,7 @@ export class RoundManager {
    * Generates a new round configuration.
    */
   generateRound(level: number): RoundData {
-    this.currentLevel = level;
+    this._currentLevel = level;
 
     // Filter valid cards (must have meaning and romaji/japanese)
     const validCards = this.cards.filter(c => c.word && c.meaning);
@@ -56,7 +55,7 @@ export class RoundManager {
     };
   }
 
-  createTargetsFromRound(round: RoundData, canvasWidth: number, canvasHeight: number): TargetEntity[] {
+  createTargetsFromRound(round: RoundData, canvasWidth: number, _canvasHeight: number): TargetEntity[] {
     const targets: TargetEntity[] = [];
     const allCards = [round.correctCard, ...round.distractors].sort(() => Math.random() - 0.5);
 
