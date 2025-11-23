@@ -15,7 +15,7 @@ export const AppRouter: React.FC = () => {
       <Route path="/decks" element={<Decks />} />
       <Route path="/decks/:deckId" element={<DeckDetails />} />
       <Route path="/import" element={<Import />} />
-      <Route path="/game" element={<div className="p-4 max-w-4xl mx-auto"><KataCannonGame /></div>} />
+      <Route path="/arcade" element={<div className="p-4 max-w-4xl mx-auto"><KataCannonGame /></div>} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );

@@ -18,7 +18,7 @@ export class GameEngine {
     baseTargetSpeed: 1.5,
     maxTargetsPerRound: 5,
     roundDurationMs: 10000,
-    projectileSpeed: 15,
+    projectileSpeed: 20,
     canvasWidth: 800,
     canvasHeight: 600,
     spawnPadding: 50
@@ -78,9 +78,6 @@ export class GameEngine {
   }
 
   handleInput(x: number, y: number) {
-    // Raycast or simple distance check to see if we clicked a bubble
-    // Note: In this arcade style, we auto-aim if the user clicks a target
-    
     let clickedTarget: TargetEntity | null = null;
 
     // Check collision with click
@@ -105,30 +102,21 @@ export class GameEngine {
     const dy = target.y - this.cannon.y;
     this.cannon.targetAngle = Math.atan2(dy, dx);
 
-    // 2. Check logic immediately (arcade style)
-    if (target.isCorrect) {
-      // Fire projectile
-      this.cannon.recoil = 15;
-      this.spawnProjectile(this.cannon.targetAngle, true);
-      // We trigger the "Hit" callback when projectile actually hits, 
-      // OR we can guarantee hit for juiciness. Let's guarantee hit for correct ones.
-    } else {
-      // Shake the wrong target
-      target.state = 'wrong';
-      this.onWrongTarget(target);
-    }
+    // 2. Fire projectile visual
+    this.cannon.recoil = 15;
+    this.spawnProjectile(this.cannon.targetAngle, target.id); // Track which target meant to hit
   }
 
-  spawnProjectile(angle: number, isHoming: boolean) {
+  spawnProjectile(angle: number, targetId: string) {
     this.projectiles.push({
-      id: `p-${Date.now()}`,
+      id: targetId, // Use ID to identify target intent
       x: this.cannon.x + Math.cos(angle) * 40,
       y: this.cannon.y + Math.sin(angle) * 40,
       vx: Math.cos(angle) * this.config.projectileSpeed,
       vy: Math.sin(angle) * this.config.projectileSpeed,
       radius: 8,
       isActive: true,
-      color: isHoming ? '#fff' : '#fff' // Use param to suppress TS error
+      color: '#fff' 
     });
   }
 
@@ -166,10 +154,8 @@ export class GameEngine {
     const height = this.config.canvasHeight;
 
     // 1. Update Cannon
-    // Smooth rotation
     const diff = this.cannon.targetAngle - this.cannon.angle;
-    this.cannon.angle += diff * 10 * dt;
-    // Recoil recovery
+    this.cannon.angle += diff * 15 * dt; // Faster rotation
     this.cannon.recoil = Math.max(0, this.cannon.recoil - 30 * dt);
 
     // 2. Update Targets
@@ -177,7 +163,7 @@ export class GameEngine {
       if (!t.isAlive) return;
       
       // Pop-in
-      if (t.scale < 1) t.scale = Math.min(1, t.scale + 2 * dt);
+      if (t.scale < 1) t.scale = Math.min(1, t.scale + 4 * dt);
 
       // Movement
       t.x += t.vx;
@@ -186,13 +172,15 @@ export class GameEngine {
       // Bounce walls
       if (t.x < t.radius) { t.x = t.radius; t.vx *= -1; }
       if (t.x > width - t.radius) { t.x = width - t.radius; t.vx *= -1; }
-      if (t.y < t.radius) { t.y = t.radius; t.vy *= -1; }
-      if (t.y > height - t.radius * 2) { t.y = height - t.radius * 2; t.vy *= -1; }
+      
+      // Bounce floor/ceiling
+      if (t.y < t.radius) { t.y = t.radius; t.vy = Math.abs(t.vy); }
+      // Don't go below cannon level too much
+      if (t.y > height - 120) { t.y = height - 120; t.vy *= -1; }
 
       // Wrong wiggle
       if (t.state === 'wrong') {
-         t.x += Math.sin(performance.now() / 50) * 2;
-         // Reset state after a bit? handled by UI mostly
+         t.x += Math.sin(performance.now() / 20) * 3;
       }
     });
 
@@ -210,21 +198,24 @@ export class GameEngine {
       // Collision
       this.targets.forEach(t => {
         if (!t.isAlive) return;
-        // Simple circle collision
+        // Projectile ID holds target ID it was aimed at.
+        // We only collide with the intended target to prevent accidental hits on distractors while travelling
+        if (p.id !== t.id) return; 
+
         const dx = p.x - t.x;
         const dy = p.y - t.y;
         const dist = Math.sqrt(dx*dx + dy*dy);
         
         if (dist < t.radius + p.radius) {
+          p.isActive = false;
+          
           if (t.isCorrect) {
-             p.isActive = false;
              t.isAlive = false;
-             this.createExplosion(t.x, t.y, '#a855f7'); // Purple explosion
+             this.createExplosion(t.x, t.y, '#a855f7'); 
              this.onTargetHit(t);
           } else {
-             // Hit wrong target? usually we don't shoot at wrong ones in this auto-aim setup
-             // but if we did manual aiming:
-             p.isActive = false;
+             t.state = 'wrong';
+             this.onWrongTarget(t);
           }
         }
       });
@@ -234,7 +225,7 @@ export class GameEngine {
     this.particles.forEach(p => {
       p.x += p.vx;
       p.y += p.vy;
-      p.life -= dt * 2; // Fade out
+      p.life -= dt * 2;
     });
     this.particles = this.particles.filter(p => p.life > 0);
   }
@@ -275,7 +266,7 @@ export class GameEngine {
         ctx.fillStyle = 'rgba(239, 68, 68, 0.8)'; // Red
         ctx.strokeStyle = '#fca5a5';
       } else {
-        ctx.fillStyle = 'rgba(124, 58, 237, 0.3)'; // Primary Purple transparent
+        ctx.fillStyle = 'rgba(124, 58, 237, 0.4)'; // Primary Purple
         ctx.strokeStyle = '#a855f7';
       }
       
@@ -283,18 +274,19 @@ export class GameEngine {
       ctx.lineWidth = 2;
       ctx.stroke();
 
-      // Highlight shine
+      // Highlight
       ctx.beginPath();
       ctx.arc(-t.radius * 0.3, -t.radius * 0.3, t.radius * 0.2, 0, Math.PI * 2);
       ctx.fillStyle = 'rgba(255,255,255,0.3)';
       ctx.fill();
 
-      // Text
+      // Text (Romaji)
       ctx.fillStyle = '#fff';
-      ctx.font = 'bold 16px "Noto Sans JP", sans-serif';
+      ctx.font = 'bold 16px "Inter", sans-serif';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
-      ctx.fillText(t.card.word, 0, 0);
+      // Basic text wrap or truncation if needed, for now just print
+      ctx.fillText(t.text, 0, 0);
 
       ctx.restore();
     });
@@ -314,19 +306,18 @@ export class GameEngine {
     ctx.translate(this.cannon.x, this.cannon.y);
     
     // Base
-    ctx.fillStyle = '#4b5563';
+    ctx.fillStyle = '#374151';
     ctx.beginPath();
     ctx.arc(0, 0, 30, Math.PI, 0);
     ctx.fill();
 
     // Barrel
     ctx.rotate(this.cannon.angle);
-    // Apply Recoil
     ctx.translate(-this.cannon.recoil, 0);
     
-    ctx.fillStyle = '#a855f7'; // Primary
+    ctx.fillStyle = '#8b5cf6'; // Primary
     ctx.beginPath();
-    ctx.roundRect(0, -12, 60, 24, 4);
+    ctx.roundRect(0, -10, 50, 20, 4);
     ctx.fill();
     
     ctx.restore();

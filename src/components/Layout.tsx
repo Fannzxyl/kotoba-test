@@ -34,7 +34,7 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
             <NavLink to="/decks" active={isActive('/decks')} icon={<Layers size={18} />}>
               Decks
             </NavLink>
-            <NavLink to="/game" active={isActive('/game')} icon={<Gamepad2 size={18} />}>
+            <NavLink to="/arcade" active={isActive('/arcade')} icon={<Gamepad2 size={18} />}>
               Arcade
             </NavLink>
             <NavLink to="/import" active={isActive('/import')} icon={<Upload size={18} />}>

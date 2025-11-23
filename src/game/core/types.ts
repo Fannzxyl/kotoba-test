@@ -1,9 +1,9 @@
 
 export interface Card {
   id: string;
-  word: string;      // Japanese, e.g. "たべます"
+  word: string;      // Japanese, e.g. "たべます" (Mapped from Japanese)
   romaji: string;    // e.g. "tabemasu"
-  meaning: string;   // e.g. "to eat"
+  meaning: string;   // e.g. "to eat" (Mapped from Indonesia)
   jlptLevel?: "N5" | "N4" | "N3" | "N2" | "N1";
   srsLevel: number;  // 0+ for spaced repetition (simulated)
 }
@@ -11,6 +11,7 @@ export interface Card {
 export interface TargetEntity {
   id: string;
   card: Card;
+  text: string; // Text to display on the bubble (romaji or japanese)
   x: number;
   y: number;
   radius: number;

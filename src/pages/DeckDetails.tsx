@@ -4,7 +4,7 @@ import { GoogleGenAI, Type } from "@google/genai";
 import { getDecks, getCards, deleteCard, addCards } from '../modules/decks/api';
 import { getInitialReviewMeta } from '../services/sm2';
 import { Deck, Card } from '../modules/decks/model';
-import { ArrowLeft, Search, Trash2, Plus, BookOpen, Sparkles, X, Loader2, AlertCircle } from 'lucide-react';
+import { ArrowLeft, Search, Trash2, Plus, BookOpen, Sparkles, X, Loader2, AlertCircle, Gamepad2 } from 'lucide-react';
 
 export const DeckDetails: React.FC = () => {
   const { deckId } = useParams<{ deckId: string }>();
@@ -149,9 +149,15 @@ export const DeckDetails: React.FC = () => {
         <div className="ml-auto flex gap-2 w-full md:w-auto">
            <Link 
              to={`/study?deckId=${deck.id}`}
-             className="flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-primary hover:bg-violet-600 text-white font-bold transition-all shadow-lg w-full md:w-auto"
+             className="flex-1 md:flex-none flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-primary hover:bg-violet-600 text-white font-bold transition-all shadow-lg"
            >
              <BookOpen size={18} /> Study Deck
+           </Link>
+           <Link 
+             to={`/arcade?deckId=${deck.id}`}
+             className="flex-1 md:flex-none flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/20 text-white font-bold transition-all"
+           >
+             <Gamepad2 size={18} /> Play Arcade
            </Link>
         </div>
       </div>

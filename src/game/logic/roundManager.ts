@@ -17,38 +17,35 @@ export class RoundManager {
     this.cards = cards;
   }
 
+  setCards(cards: Card[]) {
+    this.cards = cards;
+  }
+
   /**
    * Generates a new round configuration.
-   * Prioritizes cards with lower SRS levels.
    */
   generateRound(level: number): RoundData {
     this.currentLevel = level;
 
-    // 1. Filter eligible cards (simple logic: just shuffle all for now, 
-    // but ideally weight by srsLevel ascending)
-    const weightedDeck = [...this.cards].sort((a, b) => a.srsLevel - b.srsLevel + (Math.random() - 0.5));
+    // Filter valid cards (must have meaning and romaji/japanese)
+    const validCards = this.cards.filter(c => c.word && c.meaning);
     
-    // 2. Pick Correct Card
-    const correctCard = weightedDeck[0];
+    // Pick Correct Card
+    // (Ideally we would track recent cards to avoid repeats, but random is okay for now)
+    const correctCard = validCards[Math.floor(Math.random() * validCards.length)];
 
-    // 3. Pick Distractors (must not be the correct card)
-    const otherCards = weightedDeck.slice(1).sort(() => Math.random() - 0.5);
+    // Pick Distractors
+    const otherCards = validCards.filter(c => c.id !== correctCard.id).sort(() => Math.random() - 0.5);
     
-    // Difficulty scaling: Level 1 = 3 targets total, Level 5+ = 5 targets, etc.
-    const totalTargets = Math.min(6, 3 + Math.floor(level / 3));
+    // Number of options: 3 for early levels, up to 5
+    const totalTargets = Math.min(5, 3 + Math.floor(level / 5));
     const distractorCount = totalTargets - 1;
     const distractors = otherCards.slice(0, distractorCount);
 
-    // 4. Determine Prompt Mode (random mix)
-    const modeRoll = Math.random();
-    const promptMode: 'meaning' | 'romaji' = modeRoll > 0.5 ? 'meaning' : 'romaji';
-    
-    let promptText = '';
-    if (promptMode === 'meaning') {
-      promptText = correctCard.meaning;
-    } else {
-      promptText = correctCard.romaji;
-    }
+    // Prompt is always MEANING as per requirement
+    // Options are ROMAJI (or Japanese if romaji missing)
+    const promptText = correctCard.meaning;
+    const promptMode = 'meaning';
 
     return {
       correctCard,
@@ -63,23 +60,26 @@ export class RoundManager {
     const targets: TargetEntity[] = [];
     const allCards = [round.correctCard, ...round.distractors].sort(() => Math.random() - 0.5);
 
-    const padding = 60;
+    const padding = 80; // More padding
     const spawnAreaW = canvasWidth - padding * 2;
+    const step = spawnAreaW / (allCards.length);
     
-    // Speed scales with level
-    const baseSpeed = 1 + (this.currentLevel * 0.2);
-
     allCards.forEach((card, index) => {
       const isCorrect = card.id === round.correctCard.id;
+      
+      // Distribute horizontally
+      const x = padding + (step * index) + (step / 2) + ((Math.random() - 0.5) * 40);
+      const y = 80 + Math.random() * 100; // Spawn near top
       
       targets.push({
         id: `t-${Date.now()}-${index}`,
         card,
-        x: padding + Math.random() * spawnAreaW,
-        y: Math.random() * (canvasHeight * 0.4) + 50, // Spawn in top 40%
-        radius: 40, // base radius
-        vx: (Math.random() - 0.5) * baseSpeed,
-        vy: (Math.random() * 0.5 + 0.2) * baseSpeed * 0.5, // Slow vertical drift
+        text: card.romaji || card.word, // Show Romaji as bubbles
+        x: x,
+        y: y,
+        radius: 45, 
+        vx: (Math.random() - 0.5) * 0.5,
+        vy: 0.5 + (Math.random() * 0.5), // Fall down slowly
         isAlive: true,
         isCorrect,
         state: 'normal',
