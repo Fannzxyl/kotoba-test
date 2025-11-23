@@ -10,7 +10,6 @@ export interface RoundData {
 
 export class RoundManager {
   private cards: Card[];
-  private _currentLevel: number = 1;
 
   constructor(cards: Card[]) {
     this.cards = cards;
@@ -24,8 +23,6 @@ export class RoundManager {
    * Generates a new round configuration.
    */
   generateRound(level: number): RoundData {
-    this._currentLevel = level;
-
     // Filter valid cards (must have meaning and romaji/japanese)
     const validCards = this.cards.filter(c => c.word && c.meaning);
     
