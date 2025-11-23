@@ -5,7 +5,7 @@ import { Hud } from './ui/Hud';
 import { Controls } from './ui/Controls';
 import { GameEngine } from './core/engine';
 import { RoundManager } from './logic/roundManager';
-import { GameState, GameStats, TargetEntity, Card as GameCard } from './core/types';
+import { GameState, GameStats, Card as GameCard } from './core/types';
 import { getCards } from '../modules/decks/api';
 import { AlertCircle } from 'lucide-react';
 
