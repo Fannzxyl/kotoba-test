@@ -5,7 +5,7 @@ import { exportDeckToJSON } from '../modules/decks/api';
 import { Deck, Card } from '../modules/decks/model';
 import { 
   Search, Plus, MoreVertical, Play, Edit2, Trash2, Download, 
-  RotateCcw, X, Layers 
+  RotateCcw, X, Layers, Zap, Gamepad2 // <--- 1. Import Icon Baru
 } from 'lucide-react';
 
 export const Decks: React.FC = () => {
@@ -13,8 +13,6 @@ export const Decks: React.FC = () => {
   
   // Use Custom Hooks
   const { decks, createDeck, updateDeck, deleteDeck, restoreDeck } = useDecks();
-  // We load all cards to count them for each deck, strictly speaking we could optimize this in API
-  // but for now client-side filtering is fine for the scale.
   const { cards, refreshCards } = useCards();
 
   const [searchQuery, setSearchQuery] = useState('');
@@ -37,12 +35,6 @@ export const Decks: React.FC = () => {
     return () => clearTimeout(timeout);
   }, [showUndo]);
 
-  // Refresh all data when component mounts or relevant actions happen
-  // const refreshData = () => {
-  //   refreshDecks();
-  //   refreshCards();
-  // };
-
   const handleSaveDeck = (name: string, description: string, tags: string[]) => {
     if (editingDeck) {
       updateDeck(editingDeck.id, { name, description, tags });
@@ -63,8 +55,6 @@ export const Decks: React.FC = () => {
     setShowUndo(true);
     
     deleteDeck(id);
-    // cards will refresh automatically if we built the hook right, 
-    // but our useCards hook doesn't listen to deck changes automatically unless we trigger it
     refreshCards(); 
   };
 
@@ -174,13 +164,13 @@ export const Decks: React.FC = () => {
 
            return (
              <div key={deck.id} className="glass-panel rounded-2xl p-6 relative group hover:border-primary/30 transition-all duration-300">
-                
-                <div className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity">
-                  <div className="dropdown dropdown-end relative">
+               
+               {/* Dropdown Menu */}
+               <div className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity">
+                 <div className="dropdown dropdown-end relative">
                      <button className="p-2 hover:bg-white/10 rounded-lg text-gray-400 hover:text-white">
                        <MoreVertical size={18} />
                      </button>
-                     {/* Simple CSS Dropdown would go here, for now using basic absolute for demo */}
                      <div className="hidden group-hover:block absolute right-0 top-full mt-2 w-32 bg-[#0f0f16] border border-white/10 rounded-xl shadow-xl z-20 overflow-hidden">
                         <button onClick={() => { setEditingDeck(deck); setIsFormOpen(true); }} className="w-full text-left px-4 py-2 text-sm hover:bg-white/5 text-gray-300 flex items-center gap-2">
                           <Edit2 size={14} /> Edit
@@ -192,10 +182,11 @@ export const Decks: React.FC = () => {
                           <Trash2 size={14} /> Delete
                         </button>
                      </div>
-                  </div>
-                </div>
+                 </div>
+               </div>
 
-                <div className="mb-4">
+               {/* Content */}
+               <div className="mb-4">
                    <div className="flex flex-wrap gap-2 mb-3">
                      {deck.tags?.map(t => (
                        <span key={t} className="text-[10px] uppercase font-bold tracking-wider px-2 py-1 bg-white/5 rounded text-gray-400">#{t}</span>
@@ -203,9 +194,10 @@ export const Decks: React.FC = () => {
                    </div>
                    <h3 className="text-xl font-bold text-white mb-1">{deck.name}</h3>
                    <p className="text-sm text-gray-400 line-clamp-2 h-10">{deck.description}</p>
-                </div>
+               </div>
 
-                <div className="flex items-center gap-4 mb-6">
+               {/* Stats */}
+               <div className="flex items-center gap-4 mb-6">
                    <div className="flex-1 bg-white/5 rounded-lg p-2 text-center">
                       <div className="text-lg font-bold text-white">{cardCount}</div>
                       <div className="text-[10px] text-gray-500 uppercase">Cards</div>
@@ -214,23 +206,46 @@ export const Decks: React.FC = () => {
                       <div className="text-lg font-bold text-primary">{dueCount}</div>
                       <div className="text-[10px] text-primary/60 uppercase">Due</div>
                    </div>
-                </div>
+               </div>
 
-                <div className="flex gap-2">
+               {/* --- 2. UPDATED ACTION BUTTONS --- */}
+               <div className="flex gap-2">
+                   {/* Main Study Button */}
                    <button 
                      onClick={() => navigate(`/study?deckId=${deck.id}`)}
                      className="flex-1 bg-primary hover:bg-violet-600 text-white font-bold py-2.5 rounded-xl flex items-center justify-center gap-2 transition-colors text-sm"
                    >
                      <Play size={16} fill="currentColor" /> Study
                    </button>
+                   
+                   {/* Quiz Button (New) */}
+                   <button 
+                     onClick={() => navigate(`/test?deckId=${deck.id}`)}
+                     className="px-3 py-2.5 bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20 rounded-xl text-white transition-colors"
+                     title="Quiz Mode"
+                   >
+                     <Zap size={18} />
+                   </button>
+
+                   {/* Match Button (New) */}
+                   <button 
+                     onClick={() => navigate(`/match?deckId=${deck.id}`)}
+                     className="px-3 py-2.5 bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20 rounded-xl text-white transition-colors"
+                     title="Match Game"
+                   >
+                     <Gamepad2 size={18} />
+                   </button>
+
+                   {/* View Details Button */}
                    <button 
                      onClick={() => navigate(`/decks/${deck.id}`)}
-                     className="px-4 py-2.5 bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20 rounded-xl text-white transition-colors"
+                     className="px-3 py-2.5 bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20 rounded-xl text-white transition-colors"
                      title="View Cards"
                    >
                      <Layers size={18} />
                    </button>
-                </div>
+               </div>
+               
              </div>
            );
         })}
@@ -269,7 +284,7 @@ export const Decks: React.FC = () => {
   );
 };
 
-// Sub-component for the form to keep main component cleaner
+// Sub-component for the form
 const DeckForm: React.FC<{ 
   initialData?: Deck; 
   onSubmit: (name: string, desc: string, tags: string[]) => void;

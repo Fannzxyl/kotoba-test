@@ -1,26 +1,27 @@
+// --- GAME TYPES ---
 
+// Kita import Card structure kalau perlu, atau definisikan ulang yang simpel buat game
 export interface Card {
   id: string;
-  word: string;      // Japanese, e.g. "たべます" (Mapped from Japanese)
-  romaji: string;    // e.g. "tabemasu"
-  meaning: string;   // e.g. "to eat" (Mapped from Indonesia)
-  jlptLevel?: "N5" | "N4" | "N3" | "N2" | "N1";
-  srsLevel: number;  // 0+ for spaced repetition (simulated)
+  word: string;      // Japanese
+  romaji: string;
+  meaning: string;   // Indonesia
+  srsLevel: number;
 }
 
 export interface TargetEntity {
   id: string;
   card: Card;
-  text: string; // Text to display on the bubble (romaji or japanese)
+  text: string;     // Text yang muncul di bola
   x: number;
   y: number;
   radius: number;
   vx: number;
   vy: number;
   isAlive: boolean;
-  isCorrect: boolean; // To cheat/debug or internal check
+  isCorrect: boolean;
   state: 'normal' | 'hit' | 'wrong';
-  scale: number; // For pop-in animation
+  scale: number;    // Efek muncul (pop-in)
 }
 
 export interface CannonState {
@@ -73,11 +74,6 @@ export interface GameStats {
   lives: number;
   level: number;
   round: number;
-}
-
-export interface GameSessionStats extends GameStats {
-  totalQuestions: number;
-  answeredCards: { cardId: string; correct: boolean; attempts: number }[];
 }
 
 export type GameState = 'MENU' | 'PLAYING' | 'ROUND_TRANSITION' | 'GAME_OVER';

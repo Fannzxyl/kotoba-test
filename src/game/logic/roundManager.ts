@@ -10,6 +10,7 @@ export interface RoundData {
 
 export class RoundManager {
   private cards: Card[];
+  private recentIds: string[] = [];
 
   constructor(cards: Card[]) {
     this.cards = cards;
@@ -17,69 +18,99 @@ export class RoundManager {
 
   setCards(cards: Card[]) {
     this.cards = cards;
+    this.recentIds = [];
+  }
+
+  private pickRandomCard(validCards: Card[]): Card {
+    if (validCards.length === 0) {
+      throw new Error('No cards available');
+    }
+
+    const candidates = validCards.filter(
+      (c) => !this.recentIds.includes(c.id)
+    );
+    const pool = candidates.length > 0 ? candidates : validCards;
+
+    const chosen = pool[Math.floor(Math.random() * pool.length)];
+
+    this.recentIds.push(chosen.id);
+    if (this.recentIds.length > 10) {
+      this.recentIds.shift();
+    }
+
+    return chosen;
   }
 
   /**
    * Generates a new round configuration.
    */
   generateRound(level: number): RoundData {
-    // Filter valid cards (must have meaning and romaji/japanese)
-    const validCards = this.cards.filter(c => c.word && c.meaning);
-    
-    // Pick Correct Card
-    // (Ideally we would track recent cards to avoid repeats, but random is okay for now)
-    const correctCard = validCards[Math.floor(Math.random() * validCards.length)];
+    // Kartu valid: harus punya meaning
+    const validCards = this.cards.filter((c) => c.word && c.meaning);
 
-    // Pick Distractors
-    const otherCards = validCards.filter(c => c.id !== correctCard.id).sort(() => Math.random() - 0.5);
-    
-    // Number of options: 3 for early levels, up to 5
+    const correctCard = this.pickRandomCard(validCards);
+
+    // Distractors
+    const otherCards = validCards
+      .filter((c) => c.id !== correctCard.id)
+      .sort(() => Math.random() - 0.5);
+
+    // Jumlah opsi: mulai 3, naik sampai 5
     const totalTargets = Math.min(5, 3 + Math.floor(level / 5));
     const distractorCount = totalTargets - 1;
     const distractors = otherCards.slice(0, distractorCount);
 
-    // Prompt is always MEANING as per requirement
-    // Options are ROMAJI (or Japanese if romaji missing)
-    const promptText = correctCard.meaning;
-    const promptMode = 'meaning';
+    // Prompt: JAPAN (word + romaji di HUD), pilihan: meaning (Indonesia)
+    const promptText = correctCard.word;
+    const promptMode: 'meaning' | 'romaji' = 'meaning';
 
     return {
       correctCard,
       distractors,
       promptMode,
       promptText,
-      targetCount: totalTargets
+      targetCount: totalTargets,
     };
   }
 
-  createTargetsFromRound(round: RoundData, canvasWidth: number, _canvasHeight: number): TargetEntity[] {
+  createTargetsFromRound(
+    round: RoundData,
+    canvasWidth: number,
+    _canvasHeight: number
+  ): TargetEntity[] {
     const targets: TargetEntity[] = [];
-    const allCards = [round.correctCard, ...round.distractors].sort(() => Math.random() - 0.5);
+    const allCards = [round.correctCard, ...round.distractors].sort(
+      () => Math.random() - 0.5
+    );
 
-    const padding = 80; // More padding
+    const padding = 80;
     const spawnAreaW = canvasWidth - padding * 2;
-    const step = spawnAreaW / (allCards.length);
-    
+    const step = spawnAreaW / allCards.length;
+
     allCards.forEach((card, index) => {
       const isCorrect = card.id === round.correctCard.id;
-      
-      // Distribute horizontally
-      const x = padding + (step * index) + (step / 2) + ((Math.random() - 0.5) * 40);
-      const y = 80 + Math.random() * 100; // Spawn near top
-      
+
+      const x =
+        padding +
+        step * index +
+        step / 2 +
+        (Math.random() - 0.5) * 40;
+      const y = 120 + Math.random() * 60;
+
       targets.push({
         id: `t-${Date.now()}-${index}`,
         card,
-        text: card.romaji || card.word, // Show Romaji as bubbles
-        x: x,
-        y: y,
-        radius: 45, 
-        vx: (Math.random() - 0.5) * 0.5,
-        vy: 0.5 + (Math.random() * 0.5), // Fall down slowly
+        // Bubbles menampilkan arti (Indonesia)
+        text: card.meaning,
+        x,
+        y,
+        radius: 48,
+        vx: (Math.random() - 0.5) * 0.4,
+        vy: 0.4 + Math.random() * 0.4,
         isAlive: true,
         isCorrect,
         state: 'normal',
-        scale: 0, // Animate in
+        scale: 0,
       });
     });
 

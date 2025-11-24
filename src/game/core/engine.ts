@@ -42,20 +42,26 @@ export class GameEngine {
     this.onTargetHit = onTargetHit;
     this.onWrongTarget = onWrongTarget;
     
+    // Panggil resize awal
     this.resize();
   }
 
   resize() {
     const parent = this.canvas.parentElement;
     if (parent) {
+      // Set resolusi canvas sesuai ukuran parent (pixel perfect)
       this.canvas.width = parent.clientWidth;
       this.canvas.height = parent.clientHeight;
+      
       this.config.canvasWidth = this.canvas.width;
       this.config.canvasHeight = this.canvas.height;
       
       // Reset cannon position
       this.cannon.x = this.canvas.width / 2;
-      this.cannon.y = this.canvas.height - 40;
+      
+      // FIX MOBILE: Kasih jarak 80px dari bawah biar ga ketutup jempol/home bar
+      // Sebelumnya 40, mungkin terlalu mepet di HP
+      this.cannon.y = this.canvas.height - 80; 
     }
   }
 
@@ -78,38 +84,54 @@ export class GameEngine {
   }
 
   handleInput(x: number, y: number) {
+    // Logic input sama seperti sebelumnya...
     let clickedTarget: TargetEntity | null = null;
 
-    // Check collision with click
     for (const t of this.targets) {
       if (!t.isAlive) continue;
+      
+      // Hitbox sedikit diperbesar untuk mobile biar gampang kena
+      const hitRadius = t.radius + 10; 
+      
       const dx = x - t.x;
       const dy = y - t.y;
-      if (dx * dx + dy * dy < t.radius * t.radius) {
+      if (dx * dx + dy * dy < hitRadius * hitRadius) {
         clickedTarget = t;
         break;
       }
     }
 
+    // Kalau tidak klik target, tembak ke arah klik (bebas)
+    // Atau kalau harus klik target, pakai logic if(clickedTarget)
     if (clickedTarget) {
-      this.shootAt(clickedTarget);
+        this.shootAt(clickedTarget);
+    } else {
+        // Opsional: Tetap nembak walaupun ga kena target (buat efek visual seru)
+        this.shootAtPoint(x, y);
     }
   }
 
   shootAt(target: TargetEntity) {
-    // 1. Calculate angle
     const dx = target.x - this.cannon.x;
     const dy = target.y - this.cannon.y;
     this.cannon.targetAngle = Math.atan2(dy, dx);
-
-    // 2. Fire projectile visual
     this.cannon.recoil = 15;
-    this.spawnProjectile(this.cannon.targetAngle, target.id); // Track which target meant to hit
+    this.spawnProjectile(this.cannon.targetAngle, target.id);
+  }
+
+  // Helper baru buat nembak ke titik kosong (opsional)
+  shootAtPoint(x: number, y: number) {
+    const dx = x - this.cannon.x;
+    const dy = y - this.cannon.y;
+    this.cannon.targetAngle = Math.atan2(dy, dx);
+    this.cannon.recoil = 15;
+    // Pakai ID null atau string kosong penanda meleset
+    this.spawnProjectile(this.cannon.targetAngle, 'MISS'); 
   }
 
   spawnProjectile(angle: number, targetId: string) {
     this.projectiles.push({
-      id: targetId, // Use ID to identify target intent
+      id: targetId,
       x: this.cannon.x + Math.cos(angle) * 40,
       y: this.cannon.y + Math.sin(angle) * 40,
       vx: Math.cos(angle) * this.config.projectileSpeed,
@@ -140,7 +162,7 @@ export class GameEngine {
   private loop = () => {
     if (!this.isRunning) return;
     const now = performance.now();
-    const dt = (now - this.lastTime) / 1000; // Delta time in seconds
+    const dt = (now - this.lastTime) / 1000;
     this.lastTime = now;
 
     this.update(dt);
@@ -155,30 +177,24 @@ export class GameEngine {
 
     // 1. Update Cannon
     const diff = this.cannon.targetAngle - this.cannon.angle;
-    this.cannon.angle += diff * 15 * dt; // Faster rotation
+    this.cannon.angle += diff * 15 * dt;
     this.cannon.recoil = Math.max(0, this.cannon.recoil - 30 * dt);
 
     // 2. Update Targets
     this.targets.forEach(t => {
       if (!t.isAlive) return;
-      
-      // Pop-in
       if (t.scale < 1) t.scale = Math.min(1, t.scale + 4 * dt);
 
-      // Movement
       t.x += t.vx;
       t.y += t.vy;
 
-      // Bounce walls
       if (t.x < t.radius) { t.x = t.radius; t.vx *= -1; }
       if (t.x > width - t.radius) { t.x = width - t.radius; t.vx *= -1; }
       
-      // Bounce floor/ceiling
       if (t.y < t.radius) { t.y = t.radius; t.vy = Math.abs(t.vy); }
-      // Don't go below cannon level too much
-      if (t.y > height - 120) { t.y = height - 120; t.vy *= -1; }
+      // Batas pantulan bawah sedikit dinaikkan agar tidak terlalu dekat meriam
+      if (t.y > height - 150) { t.y = height - 150; t.vy *= -1; }
 
-      // Wrong wiggle
       if (t.state === 'wrong') {
          t.x += Math.sin(performance.now() / 20) * 3;
       }
@@ -190,16 +206,14 @@ export class GameEngine {
       p.x += p.vx;
       p.y += p.vy;
 
-      // Out of bounds
       if (p.x < 0 || p.x > width || p.y < 0 || p.y > height) {
         p.isActive = false;
       }
 
-      // Collision
       this.targets.forEach(t => {
         if (!t.isAlive) return;
-        // Projectile ID holds target ID it was aimed at.
-        // We only collide with the intended target to prevent accidental hits on distractors while travelling
+        // Kalau proyektil 'MISS' (nembak sembarang), jangan cek collision
+        if (p.id === 'MISS') return;
         if (p.id !== t.id) return; 
 
         const dx = p.x - t.x;
@@ -208,7 +222,6 @@ export class GameEngine {
         
         if (dist < t.radius + p.radius) {
           p.isActive = false;
-          
           if (t.isCorrect) {
              t.isAlive = false;
              this.createExplosion(t.x, t.y, '#a855f7'); 
@@ -231,14 +244,14 @@ export class GameEngine {
   }
 
   private draw() {
+    // Draw logic sama persis (copy paste dari yang lama aman)
     const ctx = this.ctx;
     const width = this.config.canvasWidth;
     const height = this.config.canvasHeight;
 
-    // Clear
     ctx.clearRect(0, 0, width, height);
 
-    // 1. Draw Projectiles
+    // Projectiles
     this.projectiles.forEach(p => {
       if (!p.isActive) return;
       ctx.beginPath();
@@ -250,23 +263,21 @@ export class GameEngine {
       ctx.shadowBlur = 0;
     });
 
-    // 2. Draw Targets
+    // Targets
     this.targets.forEach(t => {
       if (!t.isAlive) return;
-      
       ctx.save();
       ctx.translate(t.x, t.y);
       ctx.scale(t.scale, t.scale);
       
-      // Bubble Body
       ctx.beginPath();
       ctx.arc(0, 0, t.radius, 0, Math.PI * 2);
       
       if (t.state === 'wrong') {
-        ctx.fillStyle = 'rgba(239, 68, 68, 0.8)'; // Red
+        ctx.fillStyle = 'rgba(239, 68, 68, 0.8)';
         ctx.strokeStyle = '#fca5a5';
       } else {
-        ctx.fillStyle = 'rgba(124, 58, 237, 0.4)'; // Primary Purple
+        ctx.fillStyle = 'rgba(124, 58, 237, 0.4)';
         ctx.strokeStyle = '#a855f7';
       }
       
@@ -274,24 +285,21 @@ export class GameEngine {
       ctx.lineWidth = 2;
       ctx.stroke();
 
-      // Highlight
       ctx.beginPath();
       ctx.arc(-t.radius * 0.3, -t.radius * 0.3, t.radius * 0.2, 0, Math.PI * 2);
       ctx.fillStyle = 'rgba(255,255,255,0.3)';
       ctx.fill();
 
-      // Text (Romaji)
       ctx.fillStyle = '#fff';
       ctx.font = 'bold 16px "Inter", sans-serif';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
-      // Basic text wrap or truncation if needed, for now just print
       ctx.fillText(t.text, 0, 0);
 
       ctx.restore();
     });
 
-    // 3. Draw Particles
+    // Particles
     this.particles.forEach(p => {
       ctx.globalAlpha = p.life;
       ctx.fillStyle = p.color;
@@ -301,21 +309,19 @@ export class GameEngine {
       ctx.globalAlpha = 1;
     });
 
-    // 4. Draw Cannon
+    // Cannon
     ctx.save();
     ctx.translate(this.cannon.x, this.cannon.y);
     
-    // Base
     ctx.fillStyle = '#374151';
     ctx.beginPath();
     ctx.arc(0, 0, 30, Math.PI, 0);
     ctx.fill();
 
-    // Barrel
     ctx.rotate(this.cannon.angle);
     ctx.translate(-this.cannon.recoil, 0);
     
-    ctx.fillStyle = '#8b5cf6'; // Primary
+    ctx.fillStyle = '#8b5cf6';
     ctx.beginPath();
     ctx.roundRect(0, -10, 50, 20, 4);
     ctx.fill();
