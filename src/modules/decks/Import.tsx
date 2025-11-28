@@ -23,13 +23,13 @@ export const Import: React.FC = () => {
   const navigate = useNavigate();
   const [decks, setDecks] = useState<Deck[]>([]);
   
-  // State Import JSON (Fitur Lama)
+  // State Import JSON
   const [selectedDeckId, setSelectedDeckId] = useState<string>('');
   const [jsonInput, setJsonInput] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
 
-  // State Backup/Restore (Fitur Baru)
+  // State Backup/Restore
   const [restoreError, setRestoreError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -114,6 +114,8 @@ export const Import: React.FC = () => {
           japanese: String(item.japanese || '?'),
           indonesia: String(item.indonesia || '?'),
           example: String(item.example || ''),
+          // 🔥 FIX: Baca field 'furigana' atau 'reading' dari JSON
+          furigana: String(item.furigana || item.reading || ''),
           tags: Array.isArray(item.tags) ? item.tags : [],
           createdAt: new Date().toISOString(),
           reviewMeta: getInitialReviewMeta()
@@ -132,7 +134,6 @@ export const Import: React.FC = () => {
   };
 
   return (
-    // Container utama dikasih padding horizontal (px-4) biar gak nempel pinggir layar HP
     <div className="max-w-3xl mx-auto pb-24 md:pb-10 px-4">
       
       <h1 className="text-2xl md:text-3xl font-bold mb-6 flex items-center gap-3 mt-4">
@@ -141,7 +142,6 @@ export const Import: React.FC = () => {
       </h1>
 
       {/* SECTION 1: FULL BACKUP & RESTORE */}
-      {/* Ubah padding jadi p-5 buat mobile, md:p-8 buat desktop */}
       <div className="glass-panel p-5 md:p-8 rounded-2xl md:rounded-3xl mb-6 border border-purple-500/20">
         <h2 className="text-lg md:text-xl font-bold mb-3 flex items-center gap-2 text-white">
           <RefreshCw size={20} className="text-purple-400" />
@@ -156,7 +156,6 @@ export const Import: React.FC = () => {
           </span>
         </p>
 
-        {/* Flex Col di Mobile, Row di Desktop. Button Full Width di Mobile */}
         <div className="flex flex-col sm:flex-row gap-3">
           <button
             onClick={handleDownloadBackup}
@@ -191,7 +190,7 @@ export const Import: React.FC = () => {
         )}
       </div>
 
-      {/* SECTION 2: IMPORT CARDS (EXISTING) */}
+      {/* SECTION 2: IMPORT CARDS */}
       <div className="glass-panel p-5 md:p-8 rounded-2xl md:rounded-3xl">
         <h2 className="text-lg md:text-xl font-bold mb-3 flex items-center gap-2 text-white">
           <FileJson size={20} className="text-green-400" />
@@ -212,15 +211,29 @@ export const Import: React.FC = () => {
            </div>
         </div>
         
-        <div className="bg-black/30 rounded-xl border border-white/10 p-3 mb-4 font-mono text-[10px] md:text-xs text-gray-500 overflow-x-auto">
+        {/* 🔥 UPDATED EXAMPLE JSON TEMPLATE 🔥 */}
+        <div className="bg-black/30 rounded-xl border border-white/10 p-4 mb-4 font-mono text-[10px] md:text-xs text-gray-400 overflow-x-auto">
+          <p className="mb-2 text-gray-500 italic">// Copy format ini untuk prompt ke AI lain:</p>
           <pre>{`[
-  { "japanese": "猫", "indonesia": "kucing" },
-  { "japanese": "犬", "romaji": "inu", "indonesia": "anjing" }
+  {
+    "japanese": "食べる",
+    "furigana": "たべる",
+    "romaji": "taberu",
+    "indonesia": "Makan",
+    "example": "毎日パンを食べます"
+  },
+  {
+    "japanese": "猫",
+    "furigana": "ねこ",
+    "romaji": "neko",
+    "indonesia": "Kucing",
+    "example": "猫が好きです"
+  }
 ]`}</pre>
         </div>
 
         <textarea
-          className="w-full h-32 md:h-48 bg-black/20 border border-white/10 rounded-xl p-3 text-white font-mono text-sm focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none transition-all resize-none"
+          className="w-full h-32 md:h-48 bg-black/20 border border-white/10 rounded-xl p-3 text-white font-mono text-sm focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none transition-all resize-none placeholder-gray-600"
           placeholder="Paste JSON array here..."
           value={jsonInput}
           onChange={(e) => setJsonInput(e.target.value)}

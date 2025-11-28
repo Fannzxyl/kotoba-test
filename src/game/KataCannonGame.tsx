@@ -1,3 +1,5 @@
+// src/game/KataCannonGame.tsx
+
 import React, { useState, useRef, useEffect } from 'react';
 import { useLocation, Link } from 'react-router-dom';
 import { GameCanvas } from './ui/GameCanvas';
@@ -32,23 +34,17 @@ export const KataCannonGame: React.FC = () => {
   const engineRef = useRef<GameEngine | null>(null);
   const roundManagerRef = useRef<RoundManager>(new RoundManager([]));
 
-  // 🔥 FIX 1: Cleanup Engine saat component unmount (PENTING!)
-  useEffect(() => {
-    return () => {
-      if (engineRef.current) {
-        console.log("Cleaning up game engine...");
-        engineRef.current.stop();
-      }
-    };
-  }, []);
-
+  // Load kartu untuk deck ini (support custom selection via ?ids=id1,id2,...)
   useEffect(() => {
     const params = new URLSearchParams(location.search);
     const deckId = params.get('deckId') || undefined;
 
-    const idsParam = params.get('ids'); 
+    const idsParam = params.get('ids'); // contoh: "id1,id2,id3"
     const selectedIds = idsParam
-      ? idsParam.split(',').map((id) => id.trim()).filter(Boolean)
+      ? idsParam
+          .split(',')
+          .map((id) => id.trim())
+          .filter(Boolean)
       : [];
 
     let storageCards = getCards(deckId);
@@ -58,39 +54,40 @@ export const KataCannonGame: React.FC = () => {
       storageCards = storageCards.filter((c) => selectedSet.has(c.id));
     }
 
-    // 🔥 FIX 2: Filter lebih aman. Pastikan field penting tidak kosong/undefined.
     const gameCards: GameCard[] = storageCards
-      .filter((c) => c.japanese && c.romaji && c.indonesia) 
+      .filter((c) => c.japanese && (c.indonesia || c.romaji))
       .map((c) => ({
         id: c.id,
         word: c.japanese,
         romaji: c.romaji || '?',
-        meaning: c.indonesia || '?',
+        meaning: c.indonesia,
         srsLevel: c.reviewMeta?.repetitions || 0,
       }));
 
     if (gameCards.length < 4) {
       setError(
-        'Not enough valid cards! Please pick at least 4 cards that have Japanese, Romaji, and Meaning.'
+        'Not enough cards in this selection to play Arcade. Please pick at least 4 cards with meanings and romaji.'
       );
       setLoading(false);
       return;
     }
 
+    // Randomize order supaya tiap sesi terasa beda
     const shuffledGameCards = [...gameCards].sort(() => Math.random() - 0.5);
 
     roundManagerRef.current.setCards(shuffledGameCards);
     setLoading(false);
   }, [location.search]);
 
-  // ... (Sisa kode ke bawah sama persis, tidak ada error logic)
-  
   const playSound = () => {
-    // SFX placeholder
+    // SFX bisa ditambah nanti
   };
 
   const startGame = () => {
-    if (!engineRef.current) return;
+    if (!engineRef.current) {
+      console.error('Engine not ready');
+      return;
+    }
 
     setStats({
       score: 0,
@@ -112,23 +109,27 @@ export const KataCannonGame: React.FC = () => {
     if (!engineRef.current) return;
 
     const rm = roundManagerRef.current;
-    const currentLevel = Math.floor(stats.round / 3) + 1;
-    const roundData = rm.generateRound(currentLevel);
+    setStats((prev) => {
+      const newRound = prev.round + 1;
+      const currentLevel = Math.floor(newRound / 3) + 1;
+      const roundData = rm.generateRound(currentLevel);
 
-    setPrompt(roundData.promptText);
-    setPromptMode(roundData.promptMode);
-    setStats((prev) => ({
-      ...prev,
-      round: prev.round + 1,
-      level: currentLevel,
-    }));
+      setPrompt(roundData.promptText);
+      setPromptMode(roundData.promptMode);
 
-    const targets = rm.createTargetsFromRound(
-      roundData,
-      engineRef.current.canvas.width,
-      engineRef.current.canvas.height
-    );
-    engineRef.current.setTargets(targets);
+      const targets = rm.createTargetsFromRound(
+        roundData,
+        engineRef.current!.canvas.width,
+        engineRef.current!.canvas.height
+      );
+      engineRef.current!.setTargets(targets);
+
+      return {
+        ...prev,
+        round: newRound,
+        level: currentLevel,
+      };
+    });
   };
 
   const handleTargetHit = () => {

@@ -12,6 +12,8 @@ export interface Card {
   japanese: string;
   indonesia: string;
   example: string;
+  // NEW: optional furigana (hiragana / katakana reading)
+  furigana?: string;
   tags: string[];
   createdAt: string;
   reviewMeta: ReviewMeta;
@@ -43,5 +45,7 @@ export interface ImportData {
   japanese: string;
   indonesia: string;
   example: string;
+  // NEW: optional furigana saat import
+  furigana?: string;
   tags?: string[];
 }

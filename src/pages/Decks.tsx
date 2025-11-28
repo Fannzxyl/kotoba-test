@@ -5,13 +5,11 @@ import { exportDeckToJSON } from '../modules/decks/api';
 import { Deck, Card } from '../modules/decks/model';
 import { 
   Search, Plus, MoreVertical, Play, Edit2, Trash2, Download, 
-  RotateCcw, X, Layers, Zap, Gamepad2 // <--- 1. Import Icon Baru
+  RotateCcw, X, Layers, Zap, Gamepad2, Clock, BookOpen, Tag 
 } from 'lucide-react';
 
 export const Decks: React.FC = () => {
   const navigate = useNavigate();
-  
-  // Use Custom Hooks
   const { decks, createDeck, updateDeck, deleteDeck, restoreDeck } = useDecks();
   const { cards, refreshCards } = useCards();
 
@@ -20,7 +18,6 @@ export const Decks: React.FC = () => {
   
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingDeck, setEditingDeck] = useState<Deck | null>(null);
-  
   const [deletedDeck, setDeletedDeck] = useState<{ deck: Deck, cards: Card[] } | null>(null);
   const [showUndo, setShowUndo] = useState(false);
 
@@ -35,6 +32,16 @@ export const Decks: React.FC = () => {
     return () => clearTimeout(timeout);
   }, [showUndo]);
 
+  // Disable scroll when modal is open (biar popup tidak "lari" saat scroll)
+  useEffect(() => {
+    if (isFormOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+    return () => { document.body.style.overflow = 'unset'; };
+  }, [isFormOpen]);
+
   const handleSaveDeck = (name: string, description: string, tags: string[]) => {
     if (editingDeck) {
       updateDeck(editingDeck.id, { name, description, tags });
@@ -48,12 +55,9 @@ export const Decks: React.FC = () => {
   const handleDelete = (id: string) => {
     const deck = decks.find(d => d.id === id);
     if (!deck) return;
-    
     const deckCards = cards.filter(c => c.deckId === id);
-    
     setDeletedDeck({ deck, cards: deckCards });
     setShowUndo(true);
-    
     deleteDeck(id);
     refreshCards(); 
   };
@@ -101,159 +105,104 @@ export const Decks: React.FC = () => {
   };
 
   return (
-    <div className="animate-fade-in max-w-5xl mx-auto">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
+    <div className="animate-fade-in max-w-6xl mx-auto pb-24 px-4 md:px-0 relative min-h-screen">
+      
+      {/* Header */}
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4 mb-8 pt-6">
         <div>
-          <h1 className="text-3xl font-bold text-white mb-2">Your Decks</h1>
-          <p className="text-gray-400">Manage and organize your learning collections</p>
+          <h1 className="text-3xl md:text-4xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-purple-400 to-pink-400 mb-2">
+            Your Decks
+          </h1>
+          <p className="text-gray-400 text-sm md:text-base">Manage and organize your learning collections</p>
         </div>
         <button 
           onClick={() => { setEditingDeck(null); setIsFormOpen(true); }}
-          className="flex items-center gap-2 bg-primary hover:bg-violet-600 text-white font-bold py-3 px-6 rounded-xl shadow-lg hover:shadow-purple-500/20 transition-all"
+          className="w-full md:w-auto flex items-center justify-center gap-2 bg-primary hover:bg-violet-600 text-white font-bold py-3 px-6 rounded-xl shadow-lg shadow-purple-500/20 hover:shadow-purple-500/40 transition-all active:scale-95"
         >
           <Plus size={20} /> Create Deck
         </button>
       </div>
 
       {/* Filters */}
-      <div className="flex flex-col sm:flex-row gap-4 mb-8">
-        <div className="relative flex-1">
+      <div className="flex flex-col md:flex-row gap-4 mb-8">
+        <div className="relative w-full md:w-72 flex-shrink-0">
            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" size={18} />
            <input 
              type="text" 
              placeholder="Search decks..." 
-             className="w-full bg-black/20 border border-white/10 rounded-xl pl-10 pr-4 py-3 text-white focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all"
+             className="w-full bg-[#151520] border border-white/10 rounded-xl pl-10 pr-4 py-3 text-sm text-white focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all"
              value={searchQuery}
              onChange={e => setSearchQuery(e.target.value)}
            />
         </div>
-        <div className="flex gap-2 overflow-x-auto pb-2 sm:pb-0 no-scrollbar">
-           <button 
-             onClick={() => setSelectedTag('')}
-             className={`px-4 py-2 rounded-xl whitespace-nowrap transition-all text-sm font-medium border ${!selectedTag ? 'bg-white/10 border-white/20 text-white' : 'bg-transparent border-transparent text-gray-400 hover:text-white'}`}
-           >
-             All
-           </button>
-           {allTags.map(tag => (
-             <button 
-               key={tag}
-               onClick={() => setSelectedTag(tag)}
-               className={`px-4 py-2 rounded-xl whitespace-nowrap transition-all text-sm font-medium border ${selectedTag === tag ? 'bg-primary/20 border-primary/30 text-primary' : 'bg-transparent border-transparent text-gray-400 hover:text-white'}`}
-             >
-               #{tag}
-             </button>
-           ))}
+        <div className="flex-1 overflow-x-auto pb-2 md:pb-0 scrollbar-hide">
+           <div className="flex gap-2">
+              <button 
+                onClick={() => setSelectedTag('')}
+                className={`px-4 py-2 rounded-full whitespace-nowrap transition-all text-xs md:text-sm font-medium border ${!selectedTag ? 'bg-white text-black border-white' : 'bg-[#151520] border-white/10 text-gray-400 hover:text-white hover:border-white/30'}`}
+              >
+                All
+              </button>
+              {allTags.map(tag => (
+                <button 
+                  key={tag}
+                  onClick={() => setSelectedTag(tag)}
+                  className={`px-4 py-2 rounded-full whitespace-nowrap transition-all text-xs md:text-sm font-medium border ${selectedTag === tag ? 'bg-primary/20 border-primary text-primary' : 'bg-[#151520] border-white/10 text-gray-400 hover:text-white hover:border-white/30'}`}
+                >
+                  #{tag}
+                </button>
+              ))}
+           </div>
         </div>
       </div>
 
-      {/* Undo Toast */}
-      {showUndo && (
-        <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-50 bg-[#1a1a24] border border-white/10 px-6 py-3 rounded-full shadow-2xl flex items-center gap-4 animate-slide-up">
-          <span className="text-sm text-white">Deck deleted</span>
-          <button onClick={handleUndo} className="flex items-center gap-1 text-primary hover:text-violet-300 font-bold text-sm">
-            <RotateCcw size={14} /> Undo
-          </button>
-        </div>
-      )}
-
       {/* Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 md:gap-6">
         {filteredDecks.map(deck => {
            const cardCount = getCardCount(deck.id);
            const dueCount = getDueCount(deck.id);
-
            return (
-             <div key={deck.id} className="glass-panel rounded-2xl p-6 relative group hover:border-primary/30 transition-all duration-300">
-               
-               {/* Dropdown Menu */}
-               <div className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity">
+             <div key={deck.id} className="group relative bg-[#151520] border border-white/5 hover:border-primary/30 rounded-2xl p-5 transition-all hover:shadow-xl hover:shadow-purple-900/10 flex flex-col h-full animate-fade-in-up">
+               <div className="flex justify-between items-start mb-3">
+                 <div className="flex flex-wrap gap-1.5">
+                   {deck.tags?.slice(0, 3).map(t => (
+                     <span key={t} className="text-[10px] uppercase font-bold tracking-wider px-2 py-1 bg-white/5 rounded text-gray-400 border border-white/5">#{t}</span>
+                   ))}
+                 </div>
                  <div className="dropdown dropdown-end relative">
-                     <button className="p-2 hover:bg-white/10 rounded-lg text-gray-400 hover:text-white">
-                       <MoreVertical size={18} />
-                     </button>
-                     <div className="hidden group-hover:block absolute right-0 top-full mt-2 w-32 bg-[#0f0f16] border border-white/10 rounded-xl shadow-xl z-20 overflow-hidden">
-                        <button onClick={() => { setEditingDeck(deck); setIsFormOpen(true); }} className="w-full text-left px-4 py-2 text-sm hover:bg-white/5 text-gray-300 flex items-center gap-2">
-                          <Edit2 size={14} /> Edit
-                        </button>
-                        <button onClick={() => handleExport(deck.id)} className="w-full text-left px-4 py-2 text-sm hover:bg-white/5 text-gray-300 flex items-center gap-2">
-                          <Download size={14} /> Export
-                        </button>
-                        <button onClick={() => handleDelete(deck.id)} className="w-full text-left px-4 py-2 text-sm hover:bg-red-500/10 text-red-400 flex items-center gap-2">
-                          <Trash2 size={14} /> Delete
-                        </button>
+                     <button className="p-1.5 hover:bg-white/10 rounded-lg text-gray-500 hover:text-white transition-colors"><MoreVertical size={18} /></button>
+                     <div className="hidden group-hover:block absolute right-0 top-full mt-1 w-36 bg-[#1a1a24] border border-white/10 rounded-xl shadow-xl z-20 overflow-hidden ring-1 ring-black/50">
+                        <button onClick={() => { setEditingDeck(deck); setIsFormOpen(true); }} className="w-full text-left px-4 py-2.5 text-sm hover:bg-white/5 text-gray-300 flex items-center gap-2"><Edit2 size={14} /> Edit</button>
+                        <button onClick={() => handleExport(deck.id)} className="w-full text-left px-4 py-2.5 text-sm hover:bg-white/5 text-gray-300 flex items-center gap-2"><Download size={14} /> Export</button>
+                        <div className="h-px bg-white/5 my-1"></div>
+                        <button onClick={() => handleDelete(deck.id)} className="w-full text-left px-4 py-2.5 text-sm hover:bg-red-500/10 text-red-400 flex items-center gap-2"><Trash2 size={14} /> Delete</button>
                      </div>
                  </div>
                </div>
-
-               {/* Content */}
-               <div className="mb-4">
-                   <div className="flex flex-wrap gap-2 mb-3">
-                     {deck.tags?.map(t => (
-                       <span key={t} className="text-[10px] uppercase font-bold tracking-wider px-2 py-1 bg-white/5 rounded text-gray-400">#{t}</span>
-                     ))}
-                   </div>
-                   <h3 className="text-xl font-bold text-white mb-1">{deck.name}</h3>
-                   <p className="text-sm text-gray-400 line-clamp-2 h-10">{deck.description}</p>
+               <div className="mb-6 flex-1 cursor-pointer" onClick={() => navigate(`/decks/${deck.id}`)}>
+                   <h3 className="text-xl font-bold text-white mb-2 line-clamp-1 group-hover:text-primary transition-colors">{deck.name}</h3>
+                   <p className="text-sm text-gray-400 line-clamp-2 leading-relaxed h-10">{deck.description || "No description provided."}</p>
                </div>
-
-               {/* Stats */}
-               <div className="flex items-center gap-4 mb-6">
-                   <div className="flex-1 bg-white/5 rounded-lg p-2 text-center">
-                      <div className="text-lg font-bold text-white">{cardCount}</div>
-                      <div className="text-[10px] text-gray-500 uppercase">Cards</div>
-                   </div>
-                   <div className="flex-1 bg-primary/10 rounded-lg p-2 text-center border border-primary/20">
-                      <div className="text-lg font-bold text-primary">{dueCount}</div>
-                      <div className="text-[10px] text-primary/60 uppercase">Due</div>
+               <div className="flex items-center gap-4 mb-5 text-xs font-medium text-gray-400 border-t border-white/5 pt-4">
+                 <div className="flex items-center gap-1.5"><BookOpen size={14} className="text-blue-400" /><span>{cardCount} Cards</span></div>
+                 <div className="flex items-center gap-1.5"><Clock size={14} className={dueCount > 0 ? "text-pink-400" : "text-green-400"} /><span className={dueCount > 0 ? "text-pink-100" : ""}>{dueCount} Due</span></div>
+               </div>
+               <div className="flex items-center gap-2">
+                   <button onClick={() => navigate(`/study?deckId=${deck.id}`)} className="flex-1 bg-gradient-to-r from-primary to-violet-600 hover:from-primary/90 hover:to-violet-600/90 text-white font-bold py-2.5 rounded-xl flex items-center justify-center gap-2 transition-all shadow-lg shadow-primary/20 active:scale-95 text-sm"><Play size={16} fill="currentColor" /> Study</button>
+                   <div className="flex bg-white/5 rounded-xl p-1 border border-white/5">
+                      <button onClick={() => navigate(`/test?deckId=${deck.id}`)} className="p-2 text-gray-400 hover:text-yellow-300 hover:bg-white/10 rounded-lg transition-colors" title="Quiz Mode"><Zap size={18} /></button>
+                      <button onClick={() => navigate(`/arcade?deckId=${deck.id}`)} className="p-2 text-gray-400 hover:text-cyan-300 hover:bg-white/10 rounded-lg transition-colors" title="Arcade Game"><Gamepad2 size={18} /></button>
+                      <button onClick={() => navigate(`/decks/${deck.id}`)} className="p-2 text-gray-400 hover:text-emerald-300 hover:bg-white/10 rounded-lg transition-colors" title="View Cards"><Layers size={18} /></button>
                    </div>
                </div>
-
-               {/* --- 2. UPDATED ACTION BUTTONS --- */}
-               <div className="flex gap-2">
-                   {/* Main Study Button */}
-                   <button 
-                     onClick={() => navigate(`/study?deckId=${deck.id}`)}
-                     className="flex-1 bg-primary hover:bg-violet-600 text-white font-bold py-2.5 rounded-xl flex items-center justify-center gap-2 transition-colors text-sm"
-                   >
-                     <Play size={16} fill="currentColor" /> Study
-                   </button>
-                   
-                   {/* Quiz Button (New) */}
-                   <button 
-                     onClick={() => navigate(`/test?deckId=${deck.id}`)}
-                     className="px-3 py-2.5 bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20 rounded-xl text-white transition-colors"
-                     title="Quiz Mode"
-                   >
-                     <Zap size={18} />
-                   </button>
-
-                   {/* Match Button (New) */}
-                   <button 
-                     onClick={() => navigate(`/match?deckId=${deck.id}`)}
-                     className="px-3 py-2.5 bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20 rounded-xl text-white transition-colors"
-                     title="Match Game"
-                   >
-                     <Gamepad2 size={18} />
-                   </button>
-
-                   {/* View Details Button */}
-                   <button 
-                     onClick={() => navigate(`/decks/${deck.id}`)}
-                     className="px-3 py-2.5 bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20 rounded-xl text-white transition-colors"
-                     title="View Cards"
-                   >
-                     <Layers size={18} />
-                   </button>
-               </div>
-               
              </div>
            );
         })}
-
-        {/* Add New Card Placeholder */}
+        
+        {/* Placeholder New Deck */}
         <button 
           onClick={() => { setEditingDeck(null); setIsFormOpen(true); }}
-          className="rounded-2xl border-2 border-dashed border-white/10 hover:border-primary/50 hover:bg-primary/5 flex flex-col items-center justify-center p-6 min-h-[250px] group transition-all"
+          className="rounded-2xl border-2 border-dashed border-white/10 hover:border-primary/50 hover:bg-primary/5 flex flex-col items-center justify-center p-6 min-h-[280px] group transition-all animate-fade-in-up"
         >
            <div className="w-16 h-16 rounded-full bg-white/5 group-hover:bg-primary/20 flex items-center justify-center mb-4 transition-colors">
              <Plus size={32} className="text-gray-500 group-hover:text-primary transition-colors" />
@@ -262,14 +211,30 @@ export const Decks: React.FC = () => {
         </button>
       </div>
 
-      {/* Modal Form */}
+      {/* Undo Toast */}
+      {showUndo && (
+        <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-50 bg-[#1a1a24] border border-white/10 px-6 py-3 rounded-full shadow-2xl flex items-center gap-4 animate-slide-up">
+          <span className="text-sm text-white">Deck deleted</span>
+          <button onClick={handleUndo} className="flex items-center gap-1 text-primary hover:text-violet-300 font-bold text-sm"><RotateCcw size={14} /> Undo</button>
+        </div>
+      )}
+
+      {/* 🔥 FIX POPUP MODAL DISINI 🔥 */}
+      {/* Menggunakan Portal-like structure dengan fixed inset-0 dan z-index tinggi */}
       {isFormOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
-          <div className="bg-[#1a1a24] border border-white/10 w-full max-w-md rounded-2xl p-6 shadow-2xl animate-fade-in">
-             <div className="flex justify-between items-center mb-6">
-               <h2 className="text-xl font-bold text-white">{editingDeck ? 'Edit Deck' : 'New Deck'}</h2>
-               <button onClick={() => setIsFormOpen(false)} className="p-2 hover:bg-white/5 rounded-full">
-                 <X className="text-gray-400" size={20} />
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
+          {/* Backdrop Blur */}
+          <div className="absolute inset-0 bg-black/80 backdrop-blur-sm animate-fade-in" onClick={() => setIsFormOpen(false)} />
+          
+          {/* Modal Content */}
+          <div className="relative bg-[#1a1a24] border border-white/10 w-full max-w-md rounded-2xl p-6 shadow-2xl animate-scale-in ring-1 ring-white/10 overflow-y-auto max-h-[90vh]">
+             <div className="flex justify-between items-center mb-6 sticky top-0 bg-[#1a1a24] z-10 pb-2 border-b border-white/5">
+               <h2 className="text-xl font-bold text-white flex items-center gap-2">
+                  {editingDeck ? <Edit2 size={20} className="text-primary"/> : <Plus size={20} className="text-primary"/>}
+                  {editingDeck ? 'Edit Deck' : 'New Deck'}
+               </h2>
+               <button onClick={() => setIsFormOpen(false)} className="p-2 hover:bg-white/5 rounded-full text-gray-400 hover:text-white transition-colors">
+                 <X size={20} />
                </button>
              </div>
              <DeckForm 
@@ -284,7 +249,7 @@ export const Decks: React.FC = () => {
   );
 };
 
-// Sub-component for the form
+// Form Component
 const DeckForm: React.FC<{ 
   initialData?: Deck; 
   onSubmit: (name: string, desc: string, tags: string[]) => void;
@@ -301,44 +266,24 @@ const DeckForm: React.FC<{
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
+    <form onSubmit={handleSubmit} className="space-y-5">
       <div>
-        <label className="block text-xs text-gray-400 uppercase font-bold mb-1">Deck Name</label>
-        <input 
-          required 
-          type="text" 
-          value={name} 
-          onChange={e => setName(e.target.value)} 
-          className="w-full bg-black/30 border border-white/10 rounded-xl px-4 py-3 text-white focus:border-primary focus:ring-1 focus:ring-primary outline-none" 
-          placeholder="e.g. JLPT N5 Vocabulary" 
-        />
+        <label className="text-xs text-gray-400 uppercase font-bold mb-1.5 ml-1 block">Deck Name</label>
+        <input required type="text" value={name} onChange={e => setName(e.target.value)} className="w-full bg-black/30 border border-white/10 rounded-xl px-4 py-3 text-white focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all placeholder-gray-600" placeholder="e.g. JLPT N5 Vocabulary" autoFocus />
       </div>
       <div>
-        <label className="block text-xs text-gray-400 uppercase font-bold mb-1">Description</label>
-        <textarea 
-          value={desc} 
-          onChange={e => setDesc(e.target.value)} 
-          className="w-full bg-black/30 border border-white/10 rounded-xl px-4 py-3 text-white focus:border-primary focus:ring-1 focus:ring-primary outline-none h-24 resize-none" 
-          placeholder="What is this deck about?" 
-        />
+        <label className="text-xs text-gray-400 uppercase font-bold mb-1.5 ml-1 block">Description</label>
+        <textarea value={desc} onChange={e => setDesc(e.target.value)} className="w-full bg-black/30 border border-white/10 rounded-xl px-4 py-3 text-white focus:border-primary focus:ring-1 focus:ring-primary outline-none h-24 resize-none transition-all placeholder-gray-600" placeholder="What is this deck about?" />
       </div>
       <div>
-        <label className="block text-xs text-gray-400 uppercase font-bold mb-1">Tags (comma separated)</label>
-        <input 
-          type="text" 
-          value={tags} 
-          onChange={e => setTags(e.target.value)} 
-          className="w-full bg-black/30 border border-white/10 rounded-xl px-4 py-3 text-white focus:border-primary focus:ring-1 focus:ring-primary outline-none" 
-          placeholder="e.g. vocab, n5, verbs" 
-        />
+        <label className="text-xs text-gray-400 uppercase font-bold mb-1.5 ml-1 flex items-center gap-1">
+            <Tag size={12} /> Tags <span className="text-gray-600 font-normal normal-case">(comma separated)</span>
+        </label>
+        <input type="text" value={tags} onChange={e => setTags(e.target.value)} className="w-full bg-black/30 border border-white/10 rounded-xl px-4 py-3 text-white focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all placeholder-gray-600" placeholder="e.g. vocab, n5, verbs" />
       </div>
-      <div className="flex gap-3 mt-6">
-        <button type="button" onClick={onCancel} className="flex-1 py-3 rounded-xl font-bold text-gray-400 hover:bg-white/5 transition-colors">
-          Cancel
-        </button>
-        <button type="submit" className="flex-1 py-3 rounded-xl font-bold bg-primary hover:bg-violet-600 text-white transition-colors shadow-lg">
-          Save Deck
-        </button>
+      <div className="flex gap-3 mt-8 pt-2">
+        <button type="button" onClick={onCancel} className="flex-1 py-3 rounded-xl font-bold text-gray-400 hover:bg-white/5 hover:text-white transition-colors">Cancel</button>
+        <button type="submit" className="flex-1 py-3 rounded-xl font-bold bg-primary hover:bg-violet-600 text-white transition-all shadow-lg shadow-primary/20">Save Deck</button>
       </div>
     </form>
   );

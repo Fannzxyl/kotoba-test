@@ -1,4 +1,3 @@
-// src/pages/DeckDetails.tsx
 import React, { useState, useEffect, useMemo } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { GoogleGenAI, Type } from '@google/genai';
@@ -16,8 +15,9 @@ import {
   Loader2,
   AlertCircle,
   Gamepad2,
+  CheckSquare,
   Layers,
-  Target as TargetIcon,
+  PlayCircle
 } from 'lucide-react';
 
 export const DeckDetails: React.FC = () => {
@@ -28,7 +28,7 @@ export const DeckDetails: React.FC = () => {
   const [cards, setCards] = useState<Card[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
 
-  // selection / daily plan
+  // selection untuk custom study / arcade
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [dailyTarget, setDailyTarget] = useState<number>(7);
 
@@ -39,14 +39,16 @@ export const DeckDetails: React.FC = () => {
   const [isGenerating, setIsGenerating] = useState(false);
   const [aiError, setAiError] = useState<string | null>(null);
 
-  // Mode choice modal (selected vs all)
-  const [modeModalIntent, setModeModalIntent] = useState<'study' | 'arcade' | null>(
-    null
-  );
+  // MODE SELECTION MODAL STATE
+  const [modeModal, setModeModal] = useState<{
+    isOpen: boolean;
+    type: 'arcade' | 'study' | null;
+  }>({ isOpen: false, type: null });
 
   useEffect(() => {
     if (!deckId) return;
     loadData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [deckId]);
 
   const loadData = () => {
@@ -54,19 +56,19 @@ export const DeckDetails: React.FC = () => {
 
     const decks = getDecks();
     const foundDeck = decks.find((d) => d.id === deckId);
-
-    if (foundDeck) {
-      setDeck(foundDeck);
-      const deckCards = getCards(deckId);
-      setCards(deckCards);
-
-      // bersihkan selection yang sudah tidak ada
-      setSelectedIds((prev) =>
-        prev.filter((id) => deckCards.some((c) => c.id === id))
-      );
-    } else {
+    if (!foundDeck) {
       navigate('/decks');
+      return;
     }
+
+    const deckCards = getCards(deckId);
+    setDeck(foundDeck);
+    setCards(deckCards);
+
+    // bersihkan selection yang sudah tidak ada di deck
+    setSelectedIds((prev) =>
+      prev.filter((id) => deckCards.some((c) => c.id === id))
+    );
   };
 
   const handleDeleteCard = (cardId: string) => {
@@ -76,91 +78,7 @@ export const DeckDetails: React.FC = () => {
     }
   };
 
-  // ==== SELECTION LOGIC ====
-
-  const toggleSelectCard = (id: string) => {
-    setSelectedIds((prev) => {
-      if (prev.includes(id)) {
-        return prev.filter((x) => x !== id);
-      }
-      if (dailyTarget && prev.length >= dailyTarget) {
-        alert(`Maksimal ${dailyTarget} kosakata per hari. Ubah target kalau mau tambah.`);
-        return prev;
-      }
-      return [...prev, id];
-    });
-  };
-
-  const clearSelection = () => setSelectedIds([]);
-
-  const handleTargetChange = (value: string) => {
-    const num = parseInt(value, 10);
-    if (Number.isNaN(num) || num <= 0) {
-      setDailyTarget(1);
-      setSelectedIds((prev) => prev.slice(0, 1));
-      return;
-    }
-    setDailyTarget(num);
-    setSelectedIds((prev) => prev.slice(0, num));
-  };
-
-  // ==== ARCADE / STUDY MODE CHOICE ====
-
-  const openModeModal = (intent: 'study' | 'arcade') => {
-    if (!deck) return;
-
-    // Kalau belum pilih apa-apa → langsung pakai semua kartu, tidak perlu modal
-    if (selectedIds.length === 0) {
-      const params = new URLSearchParams();
-      params.set('deckId', deck.id);
-      if (intent === 'study') {
-        params.set('mode', 'flashcards');
-        navigate(`/study?${params.toString()}`);
-      } else {
-        navigate(`/arcade?${params.toString()}`);
-      }
-      return;
-    }
-
-    // Sudah ada selection → tampilkan modal pilihan
-    setModeModalIntent(intent);
-  };
-
-  const handleUseSelected = () => {
-    if (!deck || !modeModalIntent) return;
-
-    const params = new URLSearchParams();
-    params.set('deckId', deck.id);
-    params.set('ids', selectedIds.join(','));
-
-    if (modeModalIntent === 'study') {
-      params.set('mode', 'flashcards');
-      navigate(`/study?${params.toString()}`);
-    } else {
-      navigate(`/arcade?${params.toString()}`);
-    }
-
-    setModeModalIntent(null);
-  };
-
-  const handleUseAll = () => {
-    if (!deck || !modeModalIntent) return;
-
-    const params = new URLSearchParams();
-    params.set('deckId', deck.id);
-
-    if (modeModalIntent === 'study') {
-      params.set('mode', 'flashcards');
-      navigate(`/study?${params.toString()}`);
-    } else {
-      navigate(`/arcade?${params.toString()}`);
-    }
-
-    setModeModalIntent(null);
-  };
-
-  // ==== AI GENERATION ====
-
+  // ============== AI GENERATION (FURIGANA SUPPORT) ==============
   const handleAiGenerate = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!aiTopic || !deckId) return;
@@ -179,13 +97,16 @@ export const DeckDetails: React.FC = () => {
 
       const ai = new GoogleGenAI({ apiKey });
 
+      // 🔥 UPDATED PROMPT: Minta Furigana explisit
       const prompt = `Generate ${aiCount} Japanese vocabulary flashcards about "${aiTopic}".
-      Target level: Beginner to Intermediate.
-      Include: 
-      - Japanese (Kanji/Kana)
-      - Romaji
-      - Meaning (Indonesian)
-      - Example sentence (Japanese only)
+      Target level: Beginner to Intermediate (N5-N4).
+      
+      Requirements:
+      1. Japanese word (Kanji if applicable, otherwise Kana)
+      2. Furigana/Reading (Hiragana only). If the word is already Hiragana/Katakana, just repeat it.
+      3. Romaji reading
+      4. Indonesian Meaning
+      5. Example sentence in Japanese
       `;
 
       const response = await ai.models.generateContent({
@@ -202,6 +123,10 @@ export const DeckDetails: React.FC = () => {
                   type: Type.STRING,
                   description: 'Word in Japanese (Kanji/Kana)',
                 },
+                furigana: {
+                  type: Type.STRING,
+                  description: 'Reading in Hiragana (Furigana)',
+                },
                 romaji: {
                   type: Type.STRING,
                   description: 'Reading in Romaji',
@@ -215,7 +140,7 @@ export const DeckDetails: React.FC = () => {
                   description: 'Short example sentence in Japanese',
                 },
               },
-              required: ['japanese', 'romaji', 'indonesia', 'example'],
+              required: ['japanese', 'furigana', 'romaji', 'indonesia', 'example'],
             },
           },
         },
@@ -231,6 +156,7 @@ export const DeckDetails: React.FC = () => {
         id: `ai-${Date.now()}-${index}`,
         deckId: deckId,
         japanese: item.japanese,
+        furigana: item.furigana || '', // 🔥 Simpan Furigana
         romaji: item.romaji,
         indonesia: item.indonesia,
         example: item.example || '',
@@ -251,20 +177,74 @@ export const DeckDetails: React.FC = () => {
     }
   };
 
+  // ============== FILTER & SELECTION ==============
+
   const filteredCards = useMemo(() => {
+    const q = searchQuery.toLowerCase();
+    if (!q) return cards;
     return cards.filter(
       (c) =>
-        (c.japanese || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
-        (c.romaji || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
-        (c.indonesia || '').toLowerCase().includes(searchQuery.toLowerCase())
+        (c.japanese || '').toLowerCase().includes(q) ||
+        (c.romaji || '').toLowerCase().includes(q) ||
+        (c.indonesia || '').toLowerCase().includes(q)
     );
   }, [cards, searchQuery]);
 
-  if (!deck) return <div className="p-10 text-center">Loading...</div>;
+  const toggleSelectCard = (id: string) => {
+    setSelectedIds((prev) =>
+      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
+    );
+  };
+
+  const clearSelection = () => setSelectedIds([]);
+
+  const handleTargetChange = (value: string) => {
+    const n = parseInt(value, 10);
+    if (isNaN(n) || n <= 0) {
+      setDailyTarget(1);
+    } else if (n > cards.length) {
+      setDailyTarget(cards.length);
+    } else {
+      setDailyTarget(n);
+    }
+  };
+
+  // ============== MODE HANDLERS (Pop-up Trigger) ==============
+
+  const triggerModeSelection = (type: 'arcade' | 'study') => {
+    if (!deck) return;
+    setModeModal({ isOpen: true, type });
+  };
+
+  const handleConfirmMode = (useSelected: boolean) => {
+    if (!deck || !modeModal.type) return;
+
+    const params = new URLSearchParams();
+    params.set('deckId', deck.id);
+
+    if (modeModal.type === 'study') {
+      params.set('mode', 'flashcards');
+    }
+
+    if (useSelected && selectedIds.length > 0) {
+      params.set('ids', selectedIds.join(','));
+    }
+
+    const targetPath = modeModal.type === 'arcade' ? '/arcade' : '/study';
+    
+    setModeModal({ isOpen: false, type: null });
+    navigate(`${targetPath}?${params.toString()}`);
+  };
+
+  if (!deck) {
+    return <div className="p-10 text-center">Loading...</div>;
+  }
+
+  const selectedCount = selectedIds.length;
 
   return (
-    <div className="animate-fade-in max-w-5xl mx-auto space-y-6">
-      {/* HEADER */}
+    <div className="animate-fade-in max-w-5xl mx-auto space-y-6 relative">
+      {/* Header deck */}
       <div className="flex flex-col md:flex-row md:items-center gap-4 md:gap-6 mb-6 md:mb-8">
         <div className="flex items-center gap-4">
           <Link
@@ -275,7 +255,9 @@ export const DeckDetails: React.FC = () => {
           </Link>
           <div>
             <div className="flex items-center gap-3">
-              <h1 className="text-2xl md:text-3xl font-bold text-white">{deck.name}</h1>
+              <h1 className="text-2xl md:text-3xl font-bold text-white">
+                {deck.name}
+              </h1>
               <span className="text-xs bg-white/10 px-2 py-1 rounded text-gray-300 whitespace-nowrap">
                 {cards.length} cards
               </span>
@@ -288,13 +270,14 @@ export const DeckDetails: React.FC = () => {
 
         <div className="ml-auto flex gap-2 w-full md:w-auto">
           <button
-            onClick={() => openModeModal('study')}
-            className="flex-1 md:flex-none flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-primary hover:bg-violet-600 text-white font-bold transition-all shadow-lg"
+            onClick={() => triggerModeSelection('study')}
+            className="flex-1 md:flex-none flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-primary hover:bg-violet-600 text-white font-bold transition-all shadow-lg shadow-violet-500/20"
           >
             <BookOpen size={18} /> Study Deck
           </button>
+
           <button
-            onClick={() => openModeModal('arcade')}
+            onClick={() => triggerModeSelection('arcade')}
             className="flex-1 md:flex-none flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/20 text-white font-bold transition-all"
           >
             <Gamepad2 size={18} /> Play Arcade
@@ -302,9 +285,9 @@ export const DeckDetails: React.FC = () => {
         </div>
       </div>
 
-      {/* SEARCH + ACTIONS */}
+      {/* Bar search + AI + import */}
       <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 bg-black/20 p-3 md:p-4 rounded-2xl border border-white/5">
-        <div className="relative flex-1 w-full">
+        <div className="relative flex-1 w-full sm:max-w-md">
           <Search
             className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500"
             size={16}
@@ -312,7 +295,7 @@ export const DeckDetails: React.FC = () => {
           <input
             type="text"
             placeholder="Search in deck..."
-            className="w-full bg-black/30 border border-white/10 rounded-xl pl-10 pr-4 py-3 text-white focus:border-primary focus:ring-1 focus:ring-primary outline-none"
+            className="w-full bg-black/30 border border-white/10 rounded-xl pl-10 pr-4 py-2.5 text-sm text-white focus:border-primary focus:ring-1 focus:ring-primary outline-none"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
@@ -333,39 +316,45 @@ export const DeckDetails: React.FC = () => {
         </div>
       </div>
 
-      {/* DAILY PLAN / SELECTION BAR */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-sm px-1">
-        <div className="flex items-center flex-wrap gap-2 text-gray-300">
-          <span className="font-medium">Target per hari:</span>
+      {/* Target per hari + info selection */}
+      <div className="flex flex-col md:flex-row md:items-center gap-3 justify-between text-sm">
+        <div className="flex items-center gap-3">
+          <span className="text-gray-400">Target per hari:</span>
           <input
             type="number"
             min={1}
+            max={cards.length || 1}
             value={dailyTarget}
             onChange={(e) => handleTargetChange(e.target.value)}
-            className="w-16 bg-black/40 border border-white/15 rounded-lg px-2 py-1 text-center text-white text-sm focus:outline-none focus:border-primary"
+            className="w-20 bg-black/40 border border-white/15 rounded-lg px-3 py-1.5 text-white text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary"
           />
-          <span className="text-xs text-gray-400">
-            ({selectedIds.length} / {dailyTarget || 0} selected)
+          <span className="text-gray-500">
+            ({selectedCount} / {dailyTarget} selected)
           </span>
         </div>
-        <div className="flex gap-2">
-          <button
-            onClick={clearSelection}
-            className="px-3 py-1.5 rounded-lg text-xs border border-white/10 text-gray-300 hover:bg-white/5"
-          >
-            Clear selection
-          </button>
+
+        <div className="flex gap-2 justify-start md:justify-end">
+          {selectedCount > 0 && (
+            <button
+              onClick={clearSelection}
+              className="px-4 py-2 rounded-lg border border-white/10 text-gray-300 text-xs hover:bg-white/5 flex items-center gap-2"
+            >
+              <X size={14} /> Clear selection
+            </button>
+          )}
         </div>
       </div>
 
-      {/* TABLE */}
+      {/* Tabel kartu */}
       <div className="glass-panel rounded-2xl overflow-hidden border border-white/10">
         {filteredCards.length === 0 ? (
           <div className="p-12 text-center flex flex-col items-center">
             <div className="w-16 h-16 bg-white/5 rounded-full flex items-center justify-center mb-4">
               <Search size={24} className="text-gray-500" />
             </div>
-            <h3 className="text-lg font-semibold text-white mb-2">No cards found</h3>
+            <h3 className="text-lg font-semibold text-white mb-2">
+              No cards found
+            </h3>
             <p className="text-gray-400 max-w-sm mb-6 text-sm">
               {cards.length === 0
                 ? 'This deck is empty. Import cards manually or use AI Generation!'
@@ -385,11 +374,15 @@ export const DeckDetails: React.FC = () => {
             <table className="w-full text-left border-collapse min-w-[700px] md:min-w-0">
               <thead>
                 <tr className="bg-white/5 border-b border-white/10 text-xs uppercase tracking-wider text-gray-400">
-                  <th className="p-2 md:p-4 font-medium w-10 text-center">Sel</th>
+                  <th className="p-2 md:p-4 font-medium w-10 text-center">
+                    Sel
+                  </th>
                   <th className="p-2 md:p-4 font-medium">Japanese</th>
-                  <th className="p-2 md:p-4 font-medium">Romaji</th>
+                  <th className="p-2 md:p-4 font-medium">Reading</th>
                   <th className="p-2 md:p-4 font-medium">Meaning</th>
-                  <th className="p-2 md:p-4 font-medium text-right">Actions</th>
+                  <th className="p-2 md:p-4 font-medium text-right">
+                    Actions
+                  </th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-white/5">
@@ -398,14 +391,14 @@ export const DeckDetails: React.FC = () => {
                   return (
                     <tr
                       key={card.id}
-                      className="hover:bg-white/5 transition-colors group"
+                      className={`hover:bg-white/5 transition-colors group ${checked ? 'bg-primary/5' : ''}`}
                     >
                       <td className="p-2 md:p-4 text-center">
                         <input
                           type="checkbox"
                           checked={checked}
                           onChange={() => toggleSelectCard(card.id)}
-                          className="accent-purple-500"
+                          className="w-4 h-4 accent-primary cursor-pointer"
                         />
                       </td>
                       <td className="p-2 md:p-4">
@@ -418,8 +411,9 @@ export const DeckDetails: React.FC = () => {
                           </div>
                         )}
                       </td>
+                      {/* Tampilkan Furigana di kolom Reading */}
                       <td className="p-2 md:p-4 text-violet-200 font-medium text-sm md:text-base">
-                        {card.romaji}
+                        {card.furigana || card.romaji}
                       </td>
                       <td className="p-2 md:p-4 text-gray-300 text-sm md:text-base">
                         {card.indonesia}
@@ -442,94 +436,99 @@ export const DeckDetails: React.FC = () => {
         )}
       </div>
 
-      {/* === MODE CHOICE MODAL (SELECTED vs ALL) === */}
-      {modeModalIntent && (
-        <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/60 backdrop-blur-xl p-4">
-          <div className="relative w-full max-w-md mx-auto bg-[#141425] border border-white/15 rounded-3xl p-6 shadow-[0_0_40px_rgba(168,85,247,0.45)] overflow-hidden">
-            {/* glow blob */}
-            <div className="pointer-events-none absolute -top-16 -right-10 w-40 h-40 bg-purple-500/40 blur-3xl rounded-full" />
-            <div className="pointer-events-none absolute -bottom-16 -left-10 w-40 h-40 bg-pink-500/25 blur-3xl rounded-full" />
-
-            <div className="relative z-10">
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-lg font-semibold text-white flex items-center gap-2">
-                  <Layers size={20} className="text-purple-300" />
-                  Pilih mode kartu
-                </h2>
-                <button
-                  onClick={() => setModeModalIntent(null)}
-                  className="p-2 rounded-full hover:bg-white/10 text-gray-400 hover:text-white transition-colors"
+      {/* MODE SELECTION MODAL */}
+      {modeModal.isOpen && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
+          <div 
+            className="absolute inset-0 bg-black/60 backdrop-blur-md transition-all animate-fade-in"
+            onClick={() => setModeModal({ ...modeModal, isOpen: false })}
+          />
+          
+          <div className="relative bg-[#1a1a24] border border-white/10 w-full max-w-md rounded-2xl p-6 shadow-2xl animate-fade-in ring-1 ring-white/10">
+             <div className="flex justify-between items-start mb-6">
+                <div>
+                  <h2 className="text-xl font-bold text-white flex items-center gap-2">
+                    {modeModal.type === 'arcade' ? <Gamepad2 className="text-blue-400" /> : <BookOpen className="text-emerald-400" />}
+                    {modeModal.type === 'arcade' ? 'Arcade Mode' : 'Study Session'}
+                  </h2>
+                  <p className="text-sm text-gray-400 mt-1">
+                    Choose which cards to include in this session.
+                  </p>
+                </div>
+                <button 
+                  onClick={() => setModeModal({ ...modeModal, isOpen: false })}
+                  className="text-gray-500 hover:text-white transition-colors"
                 >
-                  <X size={18} />
+                  <X size={20} />
                 </button>
-              </div>
+             </div>
 
-              <p className="text-sm text-gray-300 mb-4">
-                Kamu sudah memilih{' '}
-                <span className="font-semibold text-purple-300">
-                  {selectedIds.length} kartu
-                </span>
-                . Mau pakai yang dipilih saja atau semua kartu di deck{' '}
-                <span className="font-semibold text-white">{deck.name}</span>?
-              </p>
+             <div className="space-y-3">
+               {selectedIds.length > 0 ? (
+                 <>
+                   <button
+                     onClick={() => handleConfirmMode(true)}
+                     className="w-full flex items-center justify-between p-4 rounded-xl bg-gradient-to-r from-primary/20 to-violet-600/20 border border-primary/50 hover:bg-primary/20 transition-all group"
+                   >
+                     <div className="flex items-center gap-3">
+                       <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center text-primary group-hover:scale-110 transition-transform">
+                         <CheckSquare size={20} />
+                       </div>
+                       <div className="text-left">
+                         <div className="font-bold text-white">Selected Cards Only</div>
+                         <div className="text-xs text-gray-400">Play with {selectedIds.length} checked words</div>
+                       </div>
+                     </div>
+                     <ArrowLeft className="rotate-180 text-gray-500 group-hover:text-white transition-colors" size={18} />
+                   </button>
 
-              <div className="space-y-3">
-                <button
-                  onClick={handleUseSelected}
-                  className="w-full flex items-center justify-between gap-3 px-4 py-3 rounded-2xl bg-gradient-to-r from-purple-600 to-pink-500 text-white font-semibold shadow-lg shadow-purple-500/40 hover:scale-[1.02] transition-transform"
-                >
-                  <div className="flex items-center gap-3">
-                    <TargetIcon size={20} />
-                    <div className="text-left">
-                      <div>Gunakan yang dipilih saja</div>
-                      <div className="text-xs text-purple-100/80">
-                        Fokus pada {selectedIds.length} kosakata pilihanmu
-                      </div>
-                    </div>
+                   <button
+                     onClick={() => handleConfirmMode(false)}
+                     className="w-full flex items-center justify-between p-4 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 transition-all group"
+                   >
+                     <div className="flex items-center gap-3">
+                       <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center text-gray-300 group-hover:scale-110 transition-transform">
+                         <Layers size={20} />
+                       </div>
+                       <div className="text-left">
+                         <div className="font-bold text-gray-200">All Cards</div>
+                         <div className="text-xs text-gray-500">Play with all {cards.length} cards in deck</div>
+                       </div>
+                     </div>
+                     <ArrowLeft className="rotate-180 text-gray-500 group-hover:text-white transition-colors" size={18} />
+                   </button>
+                 </>
+               ) : (
+                  <div className="text-center py-4">
+                     <div className="w-16 h-16 bg-white/5 rounded-full flex items-center justify-center mx-auto mb-3">
+                       <Layers size={24} className="text-gray-400" />
+                     </div>
+                     <p className="text-gray-300 mb-6">
+                       No specific cards selected. Start with all <b>{cards.length}</b> cards?
+                     </p>
+                     <button
+                       onClick={() => handleConfirmMode(false)}
+                       className="w-full py-3 bg-white text-black font-bold rounded-xl hover:bg-gray-200 transition-colors flex items-center justify-center gap-2"
+                     >
+                       <PlayCircle size={18} /> Start Session
+                     </button>
                   </div>
-                  <span className="text-xs uppercase tracking-wide opacity-80">
-                    Recommended
-                  </span>
-                </button>
-
-                <button
-                  onClick={handleUseAll}
-                  className="w-full flex items-center justify-between gap-3 px-4 py-3 rounded-2xl bg-white/5 hover:bg-white/10 text-gray-100 border border-white/10 transition-colors"
-                >
-                  <div className="flex items-center gap-3">
-                    <Layers size={20} className="text-gray-200" />
-                    <div className="text-left">
-                      <div>Pakai semua kartu</div>
-                      <div className="text-xs text-gray-400">
-                        Cocok kalau kamu mau full review satu deck
-                      </div>
-                    </div>
-                  </div>
-                  <span className="text-xs text-gray-400">{cards.length} cards</span>
-                </button>
-              </div>
-
-              <p className="mt-4 text-[11px] text-center text-gray-500">
-                Mode:{' '}
-                {modeModalIntent === 'study'
-                  ? 'Flashcards / Hafalan'
-                  : 'Arcade Game'}
-              </p>
-            </div>
+               )}
+             </div>
           </div>
         </div>
       )}
 
-      {/* AI Generation Modal */}
+      {/* AI Generation Modal (Existing) */}
       {isAiModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#050508] md:bg-black/90 md:backdrop-blur-sm p-4 transition-all">
           <div className="bg-[#1a1a24] border border-white/10 w-full max-w-md rounded-2xl p-6 shadow-2xl animate-fade-in mx-2 ring-1 ring-white/10 relative overflow-hidden">
-            {/* Decorative AI blob */}
             <div className="absolute top-[-20%] right-[-20%] w-40 h-40 bg-primary rounded-full blur-[60px] opacity-20 pointer-events-none"></div>
 
             <div className="flex justify-between items-center mb-6 relative z-10">
               <h2 className="text-xl font-bold text-white flex items-center gap-2">
-                <Sparkles className="text-pink-400" size={20} /> AI Magic Generator
+                <Sparkles className="text-pink-400" size={20} /> AI Magic
+                Generator
               </h2>
               <button
                 onClick={() => !isGenerating && setIsAiModalOpen(false)}
@@ -539,7 +538,10 @@ export const DeckDetails: React.FC = () => {
               </button>
             </div>
 
-            <form onSubmit={handleAiGenerate} className="space-y-5 relative z-10">
+            <form
+              onSubmit={handleAiGenerate}
+              className="space-y-5 relative z-10"
+            >
               <div>
                 <label className="block text-xs text-gray-400 uppercase font-bold mb-1.5">
                   Topic / Theme
