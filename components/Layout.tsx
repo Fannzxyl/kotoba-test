@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { LayoutGrid, BookOpen, Upload, Zap } from 'lucide-react';
+import { LayoutGrid, BookOpen, Upload, Zap, Layers } from 'lucide-react';
 
 export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const location = useLocation();
@@ -8,10 +8,11 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
   const isActive = (path: string) => location.pathname === path;
 
   return (
-    <div className="min-h-screen relative overflow-hidden text-gray-100 font-sans">
+    // UBAHAN 1: Pakai min-h-dvh biar pas di browser HP (gak kepotong address bar)
+    <div className="min-h-dvh relative overflow-hidden text-gray-100 font-sans flex flex-col">
       {/* Animated Background Blobs */}
-      <div className="fixed top-[-10%] left-[-10%] w-96 h-96 bg-primary rounded-full liquid-blob opacity-30 blur-[120px]"></div>
-      <div className="fixed bottom-[-10%] right-[-10%] w-[500px] h-[500px] bg-secondary rounded-full liquid-blob opacity-20 blur-[120px]" style={{ animationDelay: '2s' }}></div>
+      <div className="fixed top-[-10%] left-[-10%] w-96 h-96 bg-primary rounded-full liquid-blob opacity-30 blur-[120px] pointer-events-none"></div>
+      <div className="fixed bottom-[-10%] right-[-10%] w-[500px] h-[500px] bg-secondary rounded-full liquid-blob opacity-20 blur-[120px] pointer-events-none" style={{ animationDelay: '2s' }}></div>
       
       <nav className="fixed top-0 w-full z-50 border-b border-white/10 bg-black/20 backdrop-blur-md">
         <div className="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
@@ -19,7 +20,8 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
             <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary to-secondary flex items-center justify-center shadow-lg shadow-purple-500/20">
               <Zap size={18} className="text-white" />
             </div>
-            <span className="font-bold text-xl tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-white to-gray-400">
+            {/* UBAHAN 2: Sembunyikan teks logo di layar sangat kecil */}
+            <span className="hidden xs:inline font-bold text-xl tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-white to-gray-400">
               KataSensei
             </span>
           </div>
@@ -31,6 +33,9 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
             <NavLink to="/study" active={isActive('/study')} icon={<BookOpen size={18} />}>
               Study
             </NavLink>
+            <NavLink to="/decks" active={isActive('/decks')} icon={<Layers size={18} />}>
+              Decks
+            </NavLink>
             <NavLink to="/import" active={isActive('/import')} icon={<Upload size={18} />}>
               Import
             </NavLink>
@@ -38,7 +43,8 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
         </div>
       </nav>
 
-      <main className="pt-24 pb-12 px-4 max-w-6xl mx-auto relative z-10">
+      {/* UBAHAN 3: Padding top disesuaikan (pt-20 di HP, pt-24 di Desktop) */}
+      <main className="flex-grow pt-20 md:pt-24 pb-6 px-4 max-w-6xl mx-auto relative z-10 w-full">
         {children}
       </main>
     </div>
@@ -49,7 +55,7 @@ const NavLink: React.FC<{ to: string; active: boolean; icon: React.ReactNode; ch
   <Link
     to={to}
     className={`
-      flex items-center gap-2 px-4 py-2 rounded-full transition-all duration-300 text-sm font-medium
+      flex items-center gap-2 px-3 sm:px-4 py-2 rounded-full transition-all duration-300 text-sm font-medium
       ${active 
         ? 'bg-white/10 text-white shadow-[0_0_20px_rgba(168,85,247,0.3)] border border-white/10' 
         : 'text-gray-400 hover:text-white hover:bg-white/5'}
