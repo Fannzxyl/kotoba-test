@@ -304,7 +304,11 @@ export const Study: React.FC = () => {
     );
   }
 
-  const containsKanji = hasKanji(currentCard.japanese);
+  if (!currentCard) {
+    return <div className="flex justify-center p-20 text-gray-500">Preparing card...</div>;
+  }
+
+  const containsKanji = hasKanji(currentCard.japanese || '');
   const furiganaText = currentCard.furigana;
 
   return (
@@ -401,7 +405,7 @@ export const Study: React.FC = () => {
                 <div className="mt-6 animate-fade-in-up w-full">
                   <div className="bg-red-500/10 border border-red-500/20 rounded-2xl p-6 mb-4 text-center">
                     <p className="text-red-300 text-xs uppercase font-bold mb-2">Correct Answer</p>
-                    <p className="text-2xl md:text-3xl font-bold text-white mb-1">{currentCard.japanese}</p>
+                    <p className="text-2xl md:text-3xl font-bold text-white mb-1">{currentCard.japanese || '?'}</p>
                     <p className="text-lg text-red-200 font-mono">{currentCard.romaji}</p>
                   </div>
                   <button
@@ -447,7 +451,7 @@ export const Study: React.FC = () => {
 
                   {/* Teks Utama */}
                   <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold font-jp text-center text-white drop-shadow-[0_0_20px_rgba(168,85,247,0.4)] mb-2 leading-tight">
-                    {currentCard.japanese}
+                    {currentCard.japanese || '?'}
                   </h1>
 
                   <div className="absolute bottom-4 md:bottom-6 text-gray-600 text-[11px] md:text-sm flex items-center gap-2 opacity-70">

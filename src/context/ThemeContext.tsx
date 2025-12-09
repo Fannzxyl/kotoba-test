@@ -10,7 +10,7 @@ interface ThemeContextType {
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 export const THEMES: { id: Theme; name: string; primary: string; secondary: string }[] = [
-    { id: 'violet', name: 'Violet', primary: '#7c3aed', secondary: '#c084fc' },
+    { id: 'violet', name: 'Default', primary: '#7c3aed', secondary: '#c084fc' },
     { id: 'sakura', name: 'Sakura', primary: '#ec4899', secondary: '#f472b6' },
     { id: 'cyberpunk', name: 'Cyberpunk', primary: '#06b6d4', secondary: '#67e8f9' },
     { id: 'samurai', name: 'Samurai', primary: '#ef4444', secondary: '#f87171' },

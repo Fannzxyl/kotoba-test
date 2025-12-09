@@ -11,8 +11,9 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
   return (
     <div className="min-h-screen relative overflow-hidden text-gray-100 font-sans">
       {/* Animated Background Blobs */}
-      <div className="fixed top-[-10%] left-[-10%] w-96 h-96 bg-primary rounded-full liquid-blob opacity-30 blur-[120px]"></div>
-      <div className="fixed bottom-[-10%] right-[-10%] w-[500px] h-[500px] bg-secondary rounded-full liquid-blob opacity-20 blur-[120px]" style={{ animationDelay: '2s' }}></div>
+      {/* Animated Background Blobs - Optimized for Mobile */}
+      <div className="fixed top-[-10%] left-[-10%] w-64 h-64 md:w-96 md:h-96 bg-primary rounded-full liquid-blob opacity-20 md:opacity-30 blur-[60px] md:blur-[120px]"></div>
+      <div className="fixed bottom-[-10%] right-[-10%] w-[300px] h-[300px] md:w-[500px] md:h-[500px] bg-secondary rounded-full liquid-blob opacity-15 md:opacity-20 blur-[60px] md:blur-[120px]" style={{ animationDelay: '2s' }}></div>
 
       <nav className="fixed top-0 w-full z-50 border-b border-white/10 bg-black/20 backdrop-blur-md">
         <div className="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
