@@ -71,9 +71,17 @@ export const ThemePicker: React.FC = () => {
                             ))}
                         </div>
 
-                        <p className="text-xs text-center text-gray-500 mt-6">
-                            Theme settings are saved automatically.
-                        </p>
+                        <div className="mt-6 flex flex-col gap-3">
+                            <p className="text-xs text-center text-gray-500">
+                                Theme settings are saved automatically.
+                            </p>
+                            <button
+                                onClick={() => setIsOpen(false)}
+                                className="w-full py-3 rounded-xl bg-white/10 text-white font-medium hover:bg-white/20 active:scale-95 transition-all text-sm"
+                            >
+                                Close
+                            </button>
+                        </div>
                     </div>
                 </div>
             )}
