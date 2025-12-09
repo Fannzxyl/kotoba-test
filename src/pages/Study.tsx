@@ -35,6 +35,8 @@ export const Study: React.FC = () => {
 
   const idsParam = params.get('ids');
   const selectedIds = idsParam ? idsParam.split(',').filter(Boolean) : null;
+  const deckIdsParam = params.get('deckIds');
+  const multiDeckIds = deckIdsParam ? deckIdsParam.split(',').filter(Boolean) : null;
 
   const [queue, setQueue] = useState<Card[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -51,7 +53,12 @@ export const Study: React.FC = () => {
     setIsFlipped(false);
     setCurrentIndex(0);
 
-    const all = getCards(deckId);
+    let all: Card[] = [];
+    if (multiDeckIds && multiDeckIds.length > 0) {
+      all = getCards().filter(c => multiDeckIds.includes(c.deckId));
+    } else {
+      all = getCards(deckId);
+    }
     const now = new Date().toISOString();
     let source: Card[] = [];
 
@@ -327,11 +334,10 @@ export const Study: React.FC = () => {
 
         {/* GRADING BUTTONS */}
         <div
-          className={`transition-all duration-500 transform ${
-            isFlipped
+          className={`transition-all duration-500 transform ${isFlipped
               ? 'opacity-100 translate-y-0'
               : 'opacity-0 translate-y-4 pointer-events-none'
-          }`}
+            }`}
         >
           <div className="grid grid-cols-4 gap-2 md:gap-3 max-w-2xl mx-auto">
             <button
