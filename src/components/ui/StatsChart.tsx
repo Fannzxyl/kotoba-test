@@ -21,10 +21,10 @@ export const StatsChart: React.FC<StatsChartProps> = ({ cards }) => {
   today.setHours(0, 0, 0, 0);
 
   const stats = [
-    { name: 'Due', count: 0, color: '#d946ef' },
-    { name: 'Tom.', count: 0, color: '#a855f7' }, // Tomorrow
-    { name: '7 Days', count: 0, color: '#8b5cf6' },
-    { name: 'Later', count: 0, color: '#6366f1' },
+    { name: 'Hari Ini', fullName: 'Harus review hari ini', count: 0, color: '#d946ef' },
+    { name: 'Besok', fullName: 'Review besok', count: 0, color: '#a855f7' },
+    { name: '7 Hari', fullName: 'Review dalam 7 hari', count: 0, color: '#8b5cf6' },
+    { name: 'Nanti', fullName: 'Review lebih dari 7 hari lagi', count: 0, color: '#6366f1' },
   ];
 
   cards.forEach(card => {
@@ -38,8 +38,21 @@ export const StatsChart: React.FC<StatsChartProps> = ({ cards }) => {
     else stats[3].count++;
   });
 
+  const CustomTooltip = ({ active, payload }: any) => {
+    if (active && payload && payload.length) {
+      const data = payload[0].payload;
+      return (
+        <div className="bg-[#1a1a24] border border-white/20 rounded-lg p-3 shadow-xl">
+          <p className="text-white font-medium">{data.fullName}</p>
+          <p className="text-violet-300 text-lg font-bold">{data.count} kartu</p>
+        </div>
+      );
+    }
+    return null;
+  };
+
   return (
-    <div className="h-64 w-full mt-4">
+    <div className="h-full w-full">
       <ResponsiveContainer width="100%" height="100%">
         <BarChart
           data={stats}
@@ -53,11 +66,7 @@ export const StatsChart: React.FC<StatsChartProps> = ({ cards }) => {
           <CartesianGrid strokeDasharray="3 3" stroke="#333" vertical={false} />
           <XAxis dataKey="name" stroke="#666" tick={{ fill: '#9ca3af', fontSize: 12 }} />
           <YAxis stroke="#666" tick={{ fill: '#9ca3af', fontSize: 12 }} allowDecimals={false} />
-          <Tooltip
-            contentStyle={{ backgroundColor: '#1a1a24', borderColor: '#333', borderRadius: '8px' }}
-            itemStyle={{ color: '#fff' }}
-            cursor={{ fill: 'rgba(255,255,255,0.05)' }}
-          />
+          <Tooltip content={<CustomTooltip />} cursor={{ fill: 'rgba(255,255,255,0.05)' }} />
           <Bar dataKey="count" radius={[4, 4, 0, 0]}>
             {stats.map((entry, index) => (
               <Cell key={`cell-${index}`} fill={entry.color} />

@@ -289,15 +289,15 @@ export const Decks: React.FC = () => {
                 marginBottom: 0
               }}
             >
-              {/* DRAG HANDLE - AREA SENTUH DIPERBESAR */}
+              {/* DRAG HANDLE */}
               <div
-                className="w-full flex justify-center pt-5 pb-3 cursor-grab active:cursor-grabbing sm:hidden bg-[#1a1a24] z-20 touch-none absolute top-0 left-0 right-0 h-10"
+                className="w-full flex items-center justify-center py-3 cursor-grab active:cursor-grabbing sm:hidden bg-[#1a1a24] z-20 absolute top-0 left-0 right-0 rounded-t-3xl"
                 onTouchStart={handleTouchStart}
                 onTouchMove={handleTouchMove}
                 onTouchEnd={handleTouchEnd}
+                style={{ touchAction: 'none' }}
               >
-                {/* Pill Visual */}
-                <div className="w-16 h-1.5 bg-white/20 rounded-full" />
+                <div className={`w-10 h-1 bg-white/25 rounded-full transition-all ${isDragging ? 'w-14 bg-white/40' : ''}`} />
               </div>
 
               {/* Header */}

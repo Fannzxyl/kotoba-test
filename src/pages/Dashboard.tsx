@@ -203,24 +203,24 @@ export const Dashboard: React.FC = () => {
         </div>
       </div>
 
-      <div className="glass-panel p-6 md:p-8 rounded-3xl">
-        <div className="flex items-center justify-between mb-6">
+      <div className="glass-panel p-4 md:p-8 rounded-3xl mb-20 md:mb-0">
+        <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
             <div className="p-2 bg-violet-500/20 rounded-lg text-violet-300">
               <TrendingUp size={20} />
             </div>
             <div>
-              <h3 className="font-bold text-lg md:text-xl text-white">Forecast</h3>
-              <p className="text-xs md:text-sm text-gray-400">Upcoming review load</p>
+              <h3 className="font-bold text-base md:text-xl text-white">Jadwal Review</h3>
+              <p className="text-xs text-gray-400">Kapan kamu harus review kartu</p>
             </div>
           </div>
         </div>
-        <div className="h-48 md:h-64 w-full">
+        <div className="h-56 md:h-64 w-full">
           {cards.length > 0 ? (
             <StatsChart cards={cards} />
           ) : (
             <div className="h-full flex items-center justify-center text-gray-500 border border-dashed border-gray-700 rounded-xl">
-              <p className="text-sm">Add cards to see your forecast</p>
+              <p className="text-sm">Tambah kartu untuk melihat jadwal</p>
             </div>
           )}
         </div>

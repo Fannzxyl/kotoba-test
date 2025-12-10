@@ -1,0 +1,108 @@
+/* Bottom Sheet Styles */
+
+.bottom-sheet-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(4px);
+}
+
+.bottom-sheet {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: #1a1a24;
+    border-top-left-radius: 24px;
+    border-top-right-radius: 24px;
+    box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.5);
+    max-height: 95vh;
+    display: flex;
+    flex-direction: column;
+    touch-action: none;
+    outline: none;
+}
+
+.bottom-sheet:focus {
+    outline: 2px solid rgba(168, 85, 247, 0.5);
+    outline-offset: -2px;
+}
+
+/* Drag Handle */
+.bottom-sheet-handle {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 12px 0 8px;
+    cursor: grab;
+    touch-action: none;
+    user-select: none;
+}
+
+.bottom-sheet-handle:active {
+    cursor: grabbing;
+}
+
+.bottom-sheet-handle-pill {
+    width: 40px;
+    height: 5px;
+    background: rgba(255, 255, 255, 0.3);
+    border-radius: 3px;
+    transition: all 0.2s ease;
+}
+
+.bottom-sheet-handle:hover .bottom-sheet-handle-pill,
+.bottom-sheet-handle:active .bottom-sheet-handle-pill {
+    width: 56px;
+    background: rgba(255, 255, 255, 0.5);
+}
+
+/* Header */
+.bottom-sheet-header {
+    padding: 0 20px 16px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.bottom-sheet-title {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: white;
+    margin: 0;
+}
+
+/* Content */
+.bottom-sheet-content {
+    flex: 1;
+    overflow-y: auto;
+    padding: 16px 20px 32px;
+    overscroll-behavior: contain;
+}
+
+/* Responsive adjustments */
+@media (min-width: 640px) {
+    .bottom-sheet {
+        left: 50%;
+        right: auto;
+        transform: translateX(-50%);
+        max-width: 480px;
+        width: 100%;
+        border-radius: 24px 24px 0 0;
+    }
+}
+
+/* Animation for overlay */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+.bottom-sheet-overlay {
+    animation: fadeIn 0.2s ease-out;
+}
