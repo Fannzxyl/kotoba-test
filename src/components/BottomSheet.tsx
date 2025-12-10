@@ -100,7 +100,7 @@ export const BottomSheet: React.FC<BottomSheetProps> = ({
 
     // Drag gesture handler
     const bind = useDrag(
-        ({ movement: [, my], velocity: [, vy], direction: [, dy], cancel, active }) => {
+        ({ movement: [, my], velocity: [, vy], direction: [, dy], active }) => {
             const heights = getSnapHeights();
             const startY = window.innerHeight - heights[currentSnapRef.current];
             const newY = startY + my;
