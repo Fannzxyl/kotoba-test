@@ -283,10 +283,10 @@ export const Decks: React.FC = () => {
 
             {/* Modal Panel */}
             <div
-              className="relative w-full max-w-md bg-[#1a1a24] border-t sm:border border-white/10 rounded-t-3xl sm:rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[85vh] transition-transform duration-200 ease-out"
+              className="relative w-full max-w-md bg-[#1a1a24] border-t sm:border border-white/10 rounded-t-3xl sm:rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[70vh] transition-transform duration-200 ease-out"
               style={{
                 transform: `translateY(${Math.max(0, sheetY)}px)`,
-                marginBottom: 0
+                marginBottom: '80px'
               }}
             >
               {/* DRAG HANDLE */}
